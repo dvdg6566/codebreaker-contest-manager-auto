@@ -1,0 +1,28 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Parameters:
+  JudgeName:
+    Description: "Insert name of Codebreaker Clone"
+    Type: "String"
+    Default: "CodebreakerClone"
+
+Globals:
+  Function:
+    Timeout: 30
+    MemorySize: 1592
+    Environment:
+      Variables:
+        judgeName: !Ref JudgeName
+    Handler: app.lambda_handler
+    Runtime: python3.9
+
+Resources:
+  ProblemVerificationFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: 
+        Fn::Sub:
+          ${JudgeName}-problem-verification
+      CodeUri: lambda-functions/problem-verification
+      Policies: 
+        - AmazonDynamoDBReadOnlyAccess

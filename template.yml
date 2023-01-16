@@ -25,4 +25,92 @@ Resources:
           ${JudgeName}-problem-verification
       CodeUri: lambda-functions/problem-verification
       Policies: 
+        - AmazonDynamoDBFullAccess
+        - AmazonS3ReadOnlyAccess
+  RegradeProblemFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName:
+        Fn::Sub:
+          ${JudgeName}-regrade-problem
+      Timeout: 300
+      CodeUri:
+        lambda-functions/regrade-problem
+      Policies:
+        - AmazonDynamoDBFullAccess
+        - AWSStepFunctionsFullAccess
+  WebsocketInvokeFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName:
+        Fn::Sub:
+          ${JudgeName}-websocket-invoke
+      CodeUri:
+        lambda-functions/websocket-invoke
+      Policies:
+        - AmazonAPIGatewayInvokeFullAccess
         - AmazonDynamoDBReadOnlyAccess
+  WebsocketConnectionsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName:
+        Fn::Sub:
+          ${JudgeName}-websocket-connections
+      CodeUri:
+        lambda-functions/websocket-connections
+      Policies:
+        - AmazonDynamoDBFullAccess
+  GraderProblemInitFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName:
+        Fn::Sub:
+         ${JudgeName}-grader-problem-init
+      CodeUri:
+        lambda-functions/grader-problem-init
+      Policies:
+        - AmazonDynamoDBFullAccess
+  GraderProblemScorerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName:
+        Fn::Sub:
+         ${JudgeName}-grader-problem-scorer
+      CodeUri:
+        lambda-functions/grader-problem-scorer
+      Policies:
+        - AmazonDynamoDBFullAccess
+  TestcaseGraderWrapperFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      MemorySize: 128 # Wrapper function allocated minimal memory to minimise costs
+      FunctionName:
+        Fn::Sub:
+          ${JudgeName}-testcase-grader-wrapper
+      CodeUri:
+        lambda-functions/testcase-grader-wrapper
+      Policies:
+        - AmazonDynamoDBFullAccess
+        - AWSLambdaRole
+  TestcaseGrader2048Function:
+    Type: AWS::Serverless::Function
+    Properties:
+      MemorySize: 2590 # Larger memory to accomodate 2048MB Memory limit problems
+      FunctionName:
+        Fn::Sub:
+          ${JudgeName}-testcase-grader-2048
+      CodeUri:
+        lambda-functions/testcase-grader
+      Policies:
+        - AmazonS3ReadOnlyAccess
+  TestcaseGraderFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName:
+        Fn::Sub:
+          ${JudgeName}-testcase-grader
+      CodeUri:
+        lambda-functions/testcase-grader
+      Policies:
+        - AmazonS3ReadOnlyAccess
+

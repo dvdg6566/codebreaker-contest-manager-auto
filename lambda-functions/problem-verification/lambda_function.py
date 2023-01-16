@@ -19,9 +19,14 @@ GRADERS = f'{judgeName}-graders'
 testdata_bucket = s3.Bucket(f'{judgeName}-testdata')
 lambda_client = boto3.client('lambda')
 
-def updateCountLambda(problemName):
-    lambda_input = {"problemName": problemName}
-    res = lambda_client.invoke(FunctionName = f'arn:aws:lambda:ap-southeast-1:{accountId}:function:{judgeName}-update-testcaseCount', InvocationType='RequestResponse', Payload = json.dumps(lambda_input))
+def testcaseCount(problemName):
+    problemName = event['problemName']
+    testcaseCount = 0
+
+    for obj in testdata_bucket.objects.filter(Prefix="{0}/".format(problemName)):
+        testcaseCount += 1
+
+    return testcaseCount
 
 def verifyDependency(dependency,memo):
     ranges = dependency.split(',')
@@ -156,7 +161,7 @@ def lambda_handler(event, context):
         verdicts['scoring'] = 0
         
     # Checking subtasks
-    testcaseCount = int(problem_info['testcaseCount'])
+    testcaseCount = testcaseCount()
     maxValue = 0
     memo = [0 for i in range(max(testcaseCount+1,2000))]
     for i in problem_info['subtaskDependency']:

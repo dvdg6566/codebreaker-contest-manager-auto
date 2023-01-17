@@ -21,8 +21,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: 
-        Fn::Sub:
-          ${JudgeName}-problem-verification
+        Fn::Sub: ${JudgeName}-problem-verification
       CodeUri: lambda-functions/problem-verification
       Policies: 
         - AmazonDynamoDBFullAccess
@@ -31,11 +30,9 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName:
-        Fn::Sub:
-          ${JudgeName}-regrade-problem
+        Fn::Sub: ${JudgeName}-regrade-problem
       Timeout: 300
-      CodeUri:
-        lambda-functions/regrade-problem
+      CodeUri: lambda-functions/regrade-problem
       Policies:
         - AmazonDynamoDBFullAccess
         - AWSStepFunctionsFullAccess
@@ -43,10 +40,8 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName:
-        Fn::Sub:
-          ${JudgeName}-websocket-invoke
-      CodeUri:
-        lambda-functions/websocket-invoke
+        Fn::Sub: ${JudgeName}-websocket-invoke
+      CodeUri: lambda-functions/websocket-invoke
       Policies:
         - AmazonAPIGatewayInvokeFullAccess
         - AmazonDynamoDBReadOnlyAccess
@@ -54,30 +49,24 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName:
-        Fn::Sub:
-          ${JudgeName}-websocket-connections
-      CodeUri:
-        lambda-functions/websocket-connections
+        Fn::Sub: ${JudgeName}-websocket-connections
+      CodeUri: lambda-functions/websocket-connections
       Policies:
         - AmazonDynamoDBFullAccess
   GraderProblemInitFunction:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName:
-        Fn::Sub:
-         ${JudgeName}-grader-problem-init
-      CodeUri:
-        lambda-functions/grader-problem-init
+        Fn::Sub: ${JudgeName}-grader-problem-init
+      CodeUri: lambda-functions/grader-problem-init
       Policies:
         - AmazonDynamoDBFullAccess
   GraderProblemScorerFunction:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName:
-        Fn::Sub:
-         ${JudgeName}-grader-problem-scorer
-      CodeUri:
-        lambda-functions/grader-problem-scorer
+        Fn::Sub: ${JudgeName}-grader-problem-scorer
+      CodeUri: lambda-functions/grader-problem-scorer
       Policies:
         - AmazonDynamoDBFullAccess
   TestcaseGraderWrapperFunction:
@@ -85,10 +74,8 @@ Resources:
     Properties:
       MemorySize: 128 # Wrapper function allocated minimal memory to minimise costs
       FunctionName:
-        Fn::Sub:
-          ${JudgeName}-testcase-grader-wrapper
-      CodeUri:
-        lambda-functions/testcase-grader-wrapper
+        Fn::Sub: ${JudgeName}-testcase-grader-wrapper
+      CodeUri: lambda-functions/testcase-grader-wrapper
       Policies:
         - AmazonDynamoDBFullAccess
         - AWSLambdaRole
@@ -97,20 +84,92 @@ Resources:
     Properties:
       MemorySize: 2590 # Larger memory to accomodate 2048MB Memory limit problems
       FunctionName:
-        Fn::Sub:
-          ${JudgeName}-testcase-grader-2048
-      CodeUri:
-        lambda-functions/testcase-grader
+        Fn::Sub: ${JudgeName}-testcase-grader-2048
+      CodeUri: lambda-functions/testcase-grader
       Policies:
         - AmazonS3ReadOnlyAccess
   TestcaseGraderFunction:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName:
-        Fn::Sub:
-          ${JudgeName}-testcase-grader
-      CodeUri:
-        lambda-functions/testcase-grader
+        Fn::Sub: ${JudgeName}-testcase-grader
+      CodeUri: lambda-functions/testcase-grader
       Policies:
         - AmazonS3ReadOnlyAccess
-
+  AttachmentsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName:
+        Fn::Sub: ${JudgeName}-attachments
+      AccessControl: Private
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: True
+        BlockPublicPolicy: True
+        IgnorePublicAcls: True
+        RestrictPublicBuckets: True
+      NewerNoncurrentVersions: 0
+      NoncurrentDays: 1
+  TestdataBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: 
+        Fn::Join: ${JudgeName}-testdata
+      AccessControl: Private
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: True
+        BlockPublicPolicy: True
+        IgnorePublicAcls: True
+        RestrictPublicBuckets: True
+      NewerNoncurrentVersions: 0
+      NoncurrentDays: 1
+  SubmissionsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: 
+        Fn::Sub: ${JudgeName}-submissions
+      AccessControl: Private
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: True
+        BlockPublicPolicy: True
+        IgnorePublicAcls: True
+        RestrictPublicBuckets: True
+      LifecycleConfiguration:
+        Rules:
+          - Id: clear-old-compiled
+            Prefix: compiled/
+            Status: Enabled
+            ExpirationInDays: 1
+  StatementsBucket:
+    Type: AWS::S3::Bucket
+    Description: Statements bucket is public to allow statements to be rendered on client-side
+    Properties:
+      BucketName:
+        Fn::Sub: ${JudgeName}-statements
+      AccessControl: PublicRead
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: False
+        BlockPublicPolicy: False
+        IgnorePublicAcls: False
+        RestrictPublicBuckets: False
+  GradersBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: 
+        Fn::Sub: ${JudgeName}-graders
+      AccessControl: Private
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: True
+        BlockPublicPolicy: True
+        IgnorePublicAcls: True
+        RestrictPublicBuckets: True
+  CheckersBucket: 
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: 
+        Fn::Join: ${JudgeName}-checkers
+      AccessControl: Private
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: True
+        BlockPublicPolicy: True
+        IgnorePublicAcls: True
+        RestrictPublicBuckets: True

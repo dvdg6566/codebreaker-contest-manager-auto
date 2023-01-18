@@ -2,8 +2,8 @@ import os
 import json
 import boto3
 
-apigatewayUrl = 'https://0gsc0sffqf.execute-api.ap-southeast-1.amazonaws.com/production'
-apigateway = boto3.client('apigatewaymanagementapi', endpoint_url=apigatewayUrl)
+webSocketURI = os.environ['WebSocketURI']
+apigateway = boto3.client('apigatewaymanagementapi', endpoint_url=webSocketURI)
 dynamodb = boto3.resource('dynamodb')
 judgeName = os.environ['judgeName']
 webSocketTable = dynamodb.Table(f'{judgeName}-websocket')
@@ -15,7 +15,7 @@ def getAllConnections():
     return connectionIds
 
 def getAllAdmins():
-    # For clarification notification
+    # For new clarification notification
     return []
 
 def getUser():

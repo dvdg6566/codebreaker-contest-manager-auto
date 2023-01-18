@@ -13,7 +13,7 @@ Globals:
     Environment:
       Variables:
         judgeName: !Ref JudgeName
-    Handler: app.lambda_handler
+    Handler: lambda_function.lambda_handler
     Runtime: python3.9
 
 Resources:
@@ -37,6 +37,7 @@ Resources:
         - AmazonDynamoDBFullAccess
         - AWSStepFunctionsFullAccess
   WebsocketInvokeFunction:
+    DependsOn: WebSocket
     Type: AWS::Serverless::Function
     Properties:
       FunctionName:
@@ -45,6 +46,10 @@ Resources:
       Policies:
         - AmazonAPIGatewayInvokeFullAccess
         - AmazonDynamoDBReadOnlyAccess
+      Environment:
+        Variables:
+          WebSocketURI:
+            Fn::Sub: https://${WebSocket}.execute-api.${AWS::Region}.amazonaws.com/Production
   WebsocketConnectionsFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -169,7 +174,6 @@ Resources:
         BlockPublicPolicy: True
         IgnorePublicAcls: True
         RestrictPublicBuckets: True
-
   WebSocket:
     Type: AWS::ApiGatewayV2::Api
     Properties:
@@ -177,7 +181,6 @@ Resources:
         Fn::Sub: ${JudgeName}-websocket
       ProtocolType: WEBSOCKET
       RouteSelectionExpression: "$request.body.action"
-  
   ConnectRoute:
     Type: AWS::ApiGatewayV2::Route
     Properties:
@@ -191,8 +194,7 @@ Resources:
         - '/'
         - - 'integrations'
           - !Ref WeSocketIntegration
-
-  DisonnectRoute:
+  DisconnectRoute:
     Type: AWS::ApiGatewayV2::Route
     Properties:
       ApiId: !Ref WebSocket
@@ -205,7 +207,6 @@ Resources:
         - '/'
         - - 'integrations'
           - !Ref WeSocketIntegration
-
   MessageRoute:
     Type: AWS::ApiGatewayV2::Route
     Properties:
@@ -219,7 +220,6 @@ Resources:
         - '/'
         - - 'integrations'
           - !Ref WeSocketIntegration
-
   DefaultRoute:
     Type: AWS::ApiGatewayV2::Route
     Properties:
@@ -233,7 +233,6 @@ Resources:
         - '/'
         - - 'integrations'
           - !Ref WeSocketIntegration
-
   WeSocketIntegration:
     Type: AWS::ApiGatewayV2::Integration
     Properties:
@@ -243,4 +242,23 @@ Resources:
       IntegrationUri: 
         Fn::Sub:
           arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${WebsocketConnectionsFunction.Arn}/invocations
-      
+  WebSocketDeployment:
+    Type: AWS::ApiGatewayV2::Deployment
+    DependsOn:
+    - ConnectRoute
+    - MessageRoute
+    - DisconnectRoute
+    - DefaultRoute
+    Properties:
+      ApiId: !Ref WebSocket
+  WebSocketStage:
+    Type: AWS::ApiGatewayV2::Stage
+    Properties:
+      StageName: Production
+      Description: Production stage
+      DeploymentId: !Ref WebSocketDeployment
+      ApiId: !Ref WebSocket
+Outputs: 
+  GatewayEndpoint: 
+    Value: 
+      Fn::Sub: https://${WebSocket}.execute-api.${AWS::Region}.amazonaws.com/production

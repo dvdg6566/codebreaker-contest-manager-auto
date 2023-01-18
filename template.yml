@@ -4,7 +4,7 @@ Parameters:
   JudgeName:
     Description: "Insert name of Codebreaker Clone"
     Type: "String"
-    Default: "CodebreakerClone"
+    Default: "codebreakercontest"
 
 Globals:
   Function:
@@ -107,8 +107,6 @@ Resources:
         BlockPublicPolicy: True
         IgnorePublicAcls: True
         RestrictPublicBuckets: True
-      NewerNoncurrentVersions: 0
-      NoncurrentDays: 1
   TestdataBucket:
     Type: AWS::S3::Bucket
     Properties:
@@ -120,8 +118,6 @@ Resources:
         BlockPublicPolicy: True
         IgnorePublicAcls: True
         RestrictPublicBuckets: True
-      NewerNoncurrentVersions: 0
-      NoncurrentDays: 1
   SubmissionsBucket:
     Type: AWS::S3::Bucket
     Properties:
@@ -173,10 +169,78 @@ Resources:
         BlockPublicPolicy: True
         IgnorePublicAcls: True
         RestrictPublicBuckets: True
-  # WebSocketAPI:
-  #   Type: AWS::ApiGatewayV2::Api
-  #   Properties:
-  #     Name:
-  #       Fn::Join: ${JudgeName}-websocket
-  #     ProtocolType: WEBSOCKET
-  #     RouteSelectionExpression: "$request.body.action"
+
+  WebSocket:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Name:
+        Fn::Sub: ${JudgeName}-websocket
+      ProtocolType: WEBSOCKET
+      RouteSelectionExpression: "$request.body.action"
+  
+  ConnectRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref WebSocket
+      RouteKey: $connect
+      RouteResponseSelectionExpression: '$default'
+      AuthorizationType: NONE
+      ApiKeyRequired: false
+      OperationName: ConnectRoute
+      Target: !Join
+        - '/'
+        - - 'integrations'
+          - !Ref WeSocketIntegration
+
+  DisonnectRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref WebSocket
+      RouteKey: $disconnect
+      RouteResponseSelectionExpression: '$default'
+      AuthorizationType: NONE
+      ApiKeyRequired: false
+      OperationName: ConnectRoute
+      Target: !Join
+        - '/'
+        - - 'integrations'
+          - !Ref WeSocketIntegration
+
+  MessageRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref WebSocket
+      RouteKey: message
+      RouteResponseSelectionExpression: '$default'
+      AuthorizationType: NONE
+      ApiKeyRequired: false
+      OperationName: ConnectRoute
+      Target: !Join
+        - '/'
+        - - 'integrations'
+          - !Ref WeSocketIntegration
+
+  DefaultRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref WebSocket
+      RouteKey: $default
+      RouteResponseSelectionExpression: '$default'
+      AuthorizationType: NONE
+      ApiKeyRequired: false
+      OperationName: ConnectRoute
+      Target: !Join
+        - '/'
+        - - 'integrations'
+          - !Ref WeSocketIntegration
+
+  WeSocketIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref WebSocket
+      Description: Connect Integration
+      IntegrationType: AWS_PROXY
+      IntegrationUri: 
+        Fn::Sub:
+          arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${WebsocketConnectionsFunction.Arn}/invocations
+      

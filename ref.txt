@@ -1,0 +1,5 @@
+https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-apigatewayv2-api.html
+
+https://github.com/zijing07/simple-websockets-chat-app/blob/master/lambdas/lambdas.yaml
+https://gist.github.com/maatthc/9d2dfe0448733f0ee1624d658fbac80f
+https://blog.jayway.com/2016/08/17/introduction-to-cloudformation-for-api-gateway/

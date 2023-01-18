@@ -113,7 +113,7 @@ Resources:
     Type: AWS::S3::Bucket
     Properties:
       BucketName: 
-        Fn::Join: ${JudgeName}-testdata
+        Fn::Sub: ${JudgeName}-testdata
       AccessControl: Private
       PublicAccessBlockConfiguration:
         BlockPublicAcls: True
@@ -166,10 +166,17 @@ Resources:
     Type: AWS::S3::Bucket
     Properties:
       BucketName: 
-        Fn::Join: ${JudgeName}-checkers
+        Fn::Sub: ${JudgeName}-checkers
       AccessControl: Private
       PublicAccessBlockConfiguration:
         BlockPublicAcls: True
         BlockPublicPolicy: True
         IgnorePublicAcls: True
         RestrictPublicBuckets: True
+  # WebSocketAPI:
+  #   Type: AWS::ApiGatewayV2::Api
+  #   Properties:
+  #     Name:
+  #       Fn::Join: ${JudgeName}-websocket
+  #     ProtocolType: WEBSOCKET
+  #     RouteSelectionExpression: "$request.body.action"

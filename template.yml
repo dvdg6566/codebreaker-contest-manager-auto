@@ -9,7 +9,7 @@ Parameters:
 Globals:
   Function:
     Timeout: 30
-    MemorySize: 1592
+    MemorySize: 1600
     Environment:
       Variables:
         judgeName: !Ref JudgeName
@@ -87,7 +87,7 @@ Resources:
   TestcaseGrader2048Function:
     Type: AWS::Serverless::Function
     Properties:
-      MemorySize: 2590 # Larger memory to accomodate 2048MB Memory limit problems
+      MemorySize: 2600 # Larger memory to accomodate 2048MB Memory limit problems
       FunctionName:
         Fn::Sub: ${JudgeName}-testcase-grader-2048
       CodeUri: lambda-functions/testcase-grader
@@ -174,6 +174,126 @@ Resources:
         BlockPublicPolicy: True
         IgnorePublicAcls: True
         RestrictPublicBuckets: True
+  AnnouncementsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName:
+        Fn::Sub: ${JudgeName}-announcements
+      AttributeDefinitions:
+        - AttributeName: announceId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: announceId
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+  ClarificationsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName:
+        Fn::Sub: ${JudgeName}-clarifications
+      AttributeDefinitions:
+        - AttributeName: clarificationId
+          AttributeType: N
+        - AttributeName: askedBy
+          AttributeType: S
+      KeySchema:
+        - AttributeName: clarificationId
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+      GlobalSecondaryIndexes:
+        - IndexName: askedByIndex
+          KeySchema:
+            - AttributeName: askedBy
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+  ContestsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName:
+        Fn::Sub: ${JudgeName}-contests
+      AttributeDefinitions:
+        - AttributeName: contestId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: contestId
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+  ProblemsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName:
+        Fn::Sub: ${JudgeName}-problems
+      AttributeDefinitions:
+        - AttributeName: problemName
+          AttributeType: S
+      KeySchema:
+        - AttributeName: problemName
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+  SubmissionsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName:
+        Fn::Sub: ${JudgeName}-submissions
+      AttributeDefinitions:
+        - AttributeName: subId
+          AttributeType: N
+        - AttributeName: problemName
+          AttributeType: S
+        - AttributeName: username
+          AttributeType: S
+      KeySchema:
+        - AttributeName: subId
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+      GlobalSecondaryIndexes:
+        - IndexName: problemIndex
+          KeySchema:
+            - AttributeName: problemName
+              KeyType: HASH
+            - AttributeName: subId
+              KeyType: RANGE
+          Projection:
+            ProjectionType: INCLUDE
+            NonKeyAttributes:
+              - submissionTime
+              - maxTime
+              - maxMemory
+              - score
+              - username
+              - subtaskScores
+              - totalScores
+              - language
+              - compileErrorMessage
+        - IndexName: usernameIndex
+          KeySchema: 
+            - AttributeName: username
+              KeyType: HASH
+            - AttributeName: subId
+              KeyType: RANGE
+          Projection:
+            ProjectionType: INCLUDE
+            NonKeyAttributes: 
+              - submissionTime
+              - maxTime
+              - maxMemory
+              - problemName              
+              - totalScore
+              - language
+              - compileErrorMessage
+  usersTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName:
+        Fn::Sub: ${JudgeName}-users
+      AttributeDefinitions:
+        - AttributeName: username
+          AttributeType: S
+      KeySchema:
+        - AttributeName: username
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
   WebSocket:
     Type: AWS::ApiGatewayV2::Api
     Properties:

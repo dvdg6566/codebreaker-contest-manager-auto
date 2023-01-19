@@ -378,6 +378,39 @@ Resources:
       Description: Production stage
       DeploymentId: !Ref WebSocketDeployment
       ApiId: !Ref WebSocket
+  WebServerIamRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName:
+        Fn::Sub: ${JudgeName}-ec2main
+      AssumeRolePolicyDocument: # Specifies that role is for EC2 instances only
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/IAMFullAccess # For creating IAM roles for each problem
+        - arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess 
+        - arn:aws:iam::aws:policy/AmazonS3FullAccess
+        - arn:aws:iam::aws:policy/AWSLambda_FullAccess
+        - arn:aws:iam::aws:policy/AWSStepFunctionsFullAccess # For grading of problems
+  WebServerIamProfile:
+    Type: AWS::IAM::InstanceProfile
+    DependsOn: WebServerIamRole
+    Properties:
+      InstanceProfileName: 
+        Fn::Sub: ${JudgeName}-ec2profile
+      Roles:
+        - Ref: WebServerIamRole
+
+  # WebServer:
+  #   Type: AWS::EC2::Instance
+  #   InstanceType: t2.nano
+  #   IamInstanceProfile: 
 Outputs: 
   GatewayEndpoint: 
     Value: 

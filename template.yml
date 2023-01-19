@@ -31,7 +31,7 @@ Resources:
     Properties:
       FunctionName:
         Fn::Sub: ${JudgeName}-regrade-problem
-      Timeout: 300
+      Timeout: 900 # Extra time to iterate through all submissions
       CodeUri: lambda-functions/regrade-problem
       Policies:
         - AmazonDynamoDBFullAccess
@@ -42,6 +42,7 @@ Resources:
     Properties:
       FunctionName:
         Fn::Sub: ${JudgeName}-websocket-invoke
+      Timeout: 900 # Extra time to individually invoke each connection
       CodeUri: lambda-functions/websocket-invoke
       Policies:
         - AmazonAPIGatewayInvokeFullAccess
@@ -443,11 +444,23 @@ Resources:
         Fn::Sub: ${JudgeName}-ec2profile
       Roles:
         - Ref: WebServerIamRole
-
-  # WebServer:
-  #   Type: AWS::EC2::Instance
-  #   InstanceType: t2.nano
-  #   IamInstanceProfile: 
+  WebServer:
+    Type: AWS::EC2::Instance
+    DependsOn: WebServerIamProfile
+    Properties:
+      InstanceType: t2.nano
+      ImageId: ami-0b7e55206a0a22afc # Ubuntu 22.04 x64
+      IamInstanceProfile: 
+        Ref: WebServerIamProfile
+      Tags: 
+        - Key: Name
+          Value: 
+            Fn::Sub: ${JudgeName}-webserver
+  WebServerEIP:
+    Type: AWS::EC2::EIP
+    DependsOn: WebServer
+    Properties:
+      InstanceId: !Ref WebServer
 Outputs: 
   GatewayEndpoint: 
     Value: 

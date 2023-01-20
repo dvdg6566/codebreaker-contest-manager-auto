@@ -8,7 +8,7 @@ Parameters:
 
 Globals:
   Function:
-    Timeout: 30
+    Timeout: 60
     MemorySize: 1600
     Environment:
       Variables:
@@ -66,7 +66,7 @@ Resources:
         Fn::Sub: ${JudgeName}-grader-problem-init
       CodeUri: lambda-functions/grader-problem-init
       Policies:
-        - AmazonDynamoDBFullAccess
+        - AmazonDynamoDBFullAccess      
   GraderProblemScorerFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -102,6 +102,69 @@ Resources:
       CodeUri: lambda-functions/testcase-grader
       Policies:
         - AmazonS3ReadOnlyAccess
+  CompilerECRRepository: 
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: 
+        Fn::Sub: ${JudgeName}-compiler-repository
+  CodeBuildRole:
+    Type: AWS::IAM::Role
+    Properties: 
+      RoleName:
+        Fn::Sub: ${JudgeName}-codebuild
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Action:
+              - 'sts:AssumeRole'
+            Effect: Allow
+            Principal:
+              Service:
+                - codebuild.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryFullAccess
+        - arn:aws:iam::aws:policy/CloudWatchFullAccess
+  CodeBuildProject: 
+    Type: 'AWS::CodeBuild::Project'
+    Properties:
+      ServiceRole: !GetAtt CodeBuildRole.Arn
+      Name: 
+        Fn::Sub:
+          ${JudgeName}-codebuildproject
+      Artifacts: 
+        Type: no_artifacts
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: 'aws/codebuild/standard:6.0'
+        PrivilegedMode: true
+        EnvironmentVariables:
+          - Name: AWS_DEFAULT_REGION
+            Value: !Ref AWS::Region
+          - Name: AWS_ACCOUNT_ID
+            Value: !Ref AWS::AccountId
+          - Name: IMAGE_REPO_NAME
+            Value: 
+              Fn::Sub: ${JudgeName}-compiler-repository
+      Source:
+        Type: GITHUB
+        Location: 'https://github.com/singaporezoo/codebreaker-compiler'
+        BuildSpec: buildspec.yml
+  # CompilerFunction:
+  #   ProblemVerificationFunction:
+  #   Type: AWS::Serverless::Function
+  #   Properties:
+  #     FunctionName: 
+  #       Fn::Sub: ${JudgeName}-problem-verification
+  #     PackageType: Image
+  #     ImageUri: 
+  #       Fn::Join:
+  #         - ':'
+  #         - - !GetAtt CompilerECRRepository.RepositoryUri
+  #           - 'latest'
+  #     Policies:
+  #       - AmazonDynamoDBReadOnlyAccess
+  #       - AmazonS3FullAccess
   AttachmentsBucket:
     Type: AWS::S3::Bucket
     Properties:
@@ -331,7 +394,6 @@ Resources:
       TimeToLiveSpecification:
         AttributeName: expiryTime
         Enabled: True
-
   WebSocket:
     Type: AWS::ApiGatewayV2::Api
     Properties:
@@ -465,3 +527,9 @@ Outputs:
   GatewayEndpoint: 
     Value: 
       Fn::Sub: https://${WebSocket}.execute-api.${AWS::Region}.amazonaws.com/production
+  ECRURI:
+    Value:
+      Fn::Join:
+        - ':'
+        - - !GetAtt CompilerECRRepository.RepositoryUri
+          - 'latest'

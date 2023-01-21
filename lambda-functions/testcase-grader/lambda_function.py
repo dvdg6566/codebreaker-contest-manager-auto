@@ -66,11 +66,7 @@ def lambda_handler(event, context):
             "runtime": TLE, # runtime/s
             "memory": MLE, #memory limit/mb
             "returnCode": 69, #change this in the future
-            # "stdout": "",
-            # "stderr": str(typeof(e))
         }
-        
-        result = Funny(result,problemName,TLE)
         
         subprocess.run("rm -rf /tmp/*",shell=True)
         

@@ -522,11 +522,6 @@ Resources:
           FromPort: 80
           IpProtocol: 'tcp'
           ToPort: 80
-      SecurityGroupEgress:
-        - CidrIp: 0.0.0.0/0
-          FromPort: -1
-          IpProtocol: -1
-          ToPort: -1
   WebServer:
     Type: AWS::EC2::Instance
     DependsOn: WebServerIamProfile

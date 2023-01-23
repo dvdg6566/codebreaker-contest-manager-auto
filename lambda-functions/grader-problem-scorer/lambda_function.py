@@ -21,6 +21,7 @@ def lambda_handler(event, context):
     
     # When there is a compile error, we do not need to update any scores.
     # Just update the compile error message in Dynamo
+
     if compileError:
         awstools.updateCE(submissionId=submissionId, compileErrorMessage=compileErrorMessage)
         return {'status':200}
@@ -35,6 +36,7 @@ def lambda_handler(event, context):
             "statusCode": "300",
             "errorMessage": "No problem found"
         }
+
     problem_info = problem_info[0]
     timeLimit = problem_info['timeLimit']
     memoryLimit = problem_info['memoryLimit']
@@ -65,13 +67,6 @@ def lambda_handler(event, context):
     verdicts = submission_info['verdicts']
     status = submission_info['status']
     
-    bads = []
-    for i in range(1,len(scores)):
-        if(status[i] != 2):
-            bads.append(i)
-    
-    for i in bads:
-        print(f"Fail {i} time {times[i]}, score {scores[i]}, verdict {verdicts[i]}, status {status[i]}")
     subtaskScores = [100 for i in range(subtaskNumber)]
 
     maxTime = max(times)
@@ -114,13 +109,14 @@ def lambda_handler(event, context):
     else:
         maxScore = round(maxScore, 2)
     
-    # Update total maximum score
-    users_table.update_item(
-        Key = {'email' : email},
-        UpdateExpression = f'set problemScores. #a =:s',
-        ExpressionAttributeValues={':s' : maxScore},
-        ExpressionAttributeNames={'#a':problemName}
-    )
+    if maxScore > prevScore:
+        # Update total maximum score
+        users_table.update_item(
+            Key = {'email' : email},
+            UpdateExpression = f'set problemScores. #a =:s',
+            ExpressionAttributeValues={':s' : maxScore},
+            ExpressionAttributeNames={'#a':problemName}
+        )
 
     # Checking if this is a firstAC, if so update the #AC of problem table
     if prevScore != 100 and maxScore == 100:

@@ -506,6 +506,27 @@ Resources:
         Fn::Sub: ${JudgeName}-ec2profile
       Roles:
         - Ref: WebServerIamRole
+  WebServerSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupName: 
+        Fn::Sub:
+          ${JudgeName}-ec2SG 
+      GroupDescription: Allows SSH and HTTP
+      SecurityGroupIngress:
+        - CidrIp: 0.0.0.0/0
+          FromPort: 22
+          IpProtocol: 'tcp'
+          ToPort: 22
+        - CidrIp: 0.0.0.0/0
+          FromPort: 80
+          IpProtocol: 'tcp'
+          ToPort: 80
+      SecurityGroupEgress:
+        - CidrIp: 0.0.0.0/0
+          FromPort: -1
+          IpProtocol: -1
+          ToPort: -1
   WebServer:
     Type: AWS::EC2::Instance
     DependsOn: WebServerIamProfile
@@ -518,6 +539,19 @@ Resources:
         - Key: Name
           Value: 
             Fn::Sub: ${JudgeName}-webserver
+      SecurityGroupIds:
+        - !Ref WebServerSecurityGroup
+      UserData:
+        Fn::Base64: 
+          !Sub | 
+            #!/bin/bash
+            apt install python3-pip -y
+            apt install python3-venv -y
+            apt install awscli -y
+            apt install nginx -y
+            cd home/ubuntu
+            git clone https://github.com/dvdg6566/codebreaker-contest-manager
+            cd codebreaker-contest-manager
   WebServerEIP:
     Type: AWS::EC2::EIP
     DependsOn: WebServer

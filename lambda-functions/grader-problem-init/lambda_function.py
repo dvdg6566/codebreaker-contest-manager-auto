@@ -33,10 +33,11 @@ def lambda_handler(event, context):
             "statusCode": "300",
             "errorMessage": "No problem found"
         }
+
     problem_info = problem_info[0]
     timeLimit = problem_info['timeLimit']
     memoryLimit = problem_info['memoryLimit']
-    if memoryLimit=="":memoryLimit="256"
+    if memoryLimit=="":memoryLimit="1024"
     if timeLimit=="":timeLimit="1"
     subtaskDependency = problem_info['subtaskDependency']
     subtaskMaxScores = problem_info['subtaskScores']
@@ -55,7 +56,7 @@ def lambda_handler(event, context):
     submission_upload = {
          "subId": submissionId,
          "submissionTime": subTime,
-         "gradingTime": (datetime.datetime.now()+datetime.timedelta(hours=8)).strftime("%Y-%m-%d %X"),
+         "gradingTime": (datetime.datetime.utcnow()+datetime.timedelta(hours=8)).strftime("%Y-%m-%d %X"),
          "username": username,
          "maxMemory":0,
          "maxTime":0,
@@ -71,6 +72,8 @@ def lambda_handler(event, context):
          'language': language
     }
     
+    awstools.uploadSubmission(submission_upload)
+    
     lambda_input = {
         "problemName": problemName,
         "submissionId": submissionId,
@@ -82,8 +85,8 @@ def lambda_handler(event, context):
         "language": language
     }
     
-    awstools.uploadSubmission(submission_upload)
-    
+    # GENERATES LAMBDA INPUT TO SEND TO STEP FUNCTION
+
     output = {
         'status': 200,
         'payloads': [],

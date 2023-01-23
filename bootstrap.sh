@@ -35,6 +35,8 @@ echo 'FLASK_SECRET_KEY = "PLACEHOLDER"' >> password.py
 	echo 'WantedBy=multi-user.target'
 } >> /etc/systemd/system/codebreaker.service
 
+systemctl start codebreaker
+systemctl enable codebreaker
 systemctl start nginx
 systemctl enable nginx
 

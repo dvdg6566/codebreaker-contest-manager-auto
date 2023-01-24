@@ -17,12 +17,12 @@ Globals:
     Runtime: python3.9
 
 Resources:
-  ProblemVerificationFunction:
+  ProblemValidationFunction:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: 
-        Fn::Sub: ${JudgeName}-problem-verification
-      CodeUri: lambda-functions/problem-verification
+        Fn::Sub: ${JudgeName}-problem-validation
+      CodeUri: lambda-functions/problem-validation
       Policies: 
         - AmazonDynamoDBFullAccess
         - AmazonS3ReadOnlyAccess

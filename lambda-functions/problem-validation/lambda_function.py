@@ -1,233 +1,189 @@
 import os
 import json
-import boto3
-from botocore.exceptions import ClientError
-from boto3.dynamodb.conditions import Key, Attr
+import awstools
 
 judgeName = os.environ['judgeName']
-stsclient = boto3.client('sts')
-accountId = stsclient.get_caller_identity()['Account'] # Gets account Id programatically
-
-s3=boto3.resource('s3')
-dynamodb = boto3.resource('dynamodb')
-problems_table = dynamodb.Table(f'{judgeName}-problems')
-
-STATEMENTS = f'{judgeName}-statements'
-CHECKERS = f'{judgeName}-checkers'
-ATTACHMENTS = f'{judgeName}-attachments'
-GRADERS = f'{judgeName}-graders'
-testdata_bucket = s3.Bucket(f'{judgeName}-testdata')
-lambda_client = boto3.client('lambda')
-
-def testcaseCount(problemName):
-    problemName = event['problemName']
-    testcaseCount = 0
-
-    for obj in testdata_bucket.objects.filter(Prefix="{0}/".format(problemName)):
-        testcaseCount += 1
-
-    return testcaseCount
+STATEMENTS_BUCKET = f'{judgeName}-statements'
+CHECKERS_BUCKET = f'{judgeName}-checkers'
+ATTACHMENTS_BUCKET = f'{judgeName}-attachments'
+GRADERS_BUCKET = f'{judgeName}-graders'
 
 def verifyDependency(dependency,memo):
-    ranges = dependency.split(',')
-    ans = 0
-    for i in ranges:
-        nums = i.split('-')
-        if len(nums) > 1:
-            x, y = int(nums[0]), int(nums[1])
-            for i in range(x,y+1):memo[i]=1
-            ans=max(ans,y)
-        else:
-            x = int(nums[0])
-            ans=max(ans,x)
-            memo[x]=1
-            
-    return ans
+	ranges = dependency.split(',')
+	ans = 0
+	for i in ranges:
+		nums = i.split('-')
+		if len(nums) > 1:
+			x, y = int(nums[0]), int(nums[1])
+			for i in range(x,y+1):memo[i]=1
+			ans=max(ans,y)
+		else:
+			x = int(nums[0])
+			ans=max(ans,x)
+			memo[x]=1
+	return ans
 
 def lambda_handler(event, context):
+	problemName = event['problemName']
 
-    problemName = event['problemName']
-    updateCountLambda(problemName)
-    
-    # TODO implement
-    remarks= {
-        'testdata': 'ok',
-        'attachments': 'ok, no attachments required',
-        'checker': 'ok, no checker required',
-        'statement': 'ok',
-        'grader': 'ok, no grader required',
-        'subtasks': 'ok',
-        'scoring': 'ok'
-    }
-    verdicts={
-        'testdata': 1,
-        'attachments' : 1,
-        'checker': 1,
-        'statement': 1,
-        'grader': 1,
-        'subtasks': 1,
-        'scoring': 1
-    }
-    response= problems_table.query(
-        KeyConditionExpression = Key('problemName').eq(problemName)
-    )
-    problem_info=response['Items'][0]
-    
-    # Verifying statements
-    hasHTML = True
-    hasPDF = True
-    try:
-        s3.Object(STATEMENTS, f'{problemName}.html').load()
-    except ClientError as e:
-        hasHTML = False
-    
-    try:
-        s3.Object(STATEMENTS, f'{problemName}.pdf').load()
-    except ClientError as e:
-        hasPDF = False
-    
-    if hasHTML and hasPDF:
-        remarks['statement'] = 'ok, Both PDF and HTML statements found!'
-    elif hasHTML:
-        remarks['statement'] = 'ok, HTML statement found!'
-    elif hasPDF:
-        remarks['statement'] = 'ok, PDF statement found!'
-    else:
-        remarks['statement'] = 'No statement found!'
-        verdicts['statement'] = 0
-    
-    # Verifying checker
-    if problem_info['customChecker'] == 1:
-        try:
-            s3.Object(CHECKERS, f'compiled/{problemName}').load()
-            remarks['checker'] = 'ok, checker found!'
-        except ClientError as e:
-            remarks['checker'] = 'No checker found!'
-            verdicts['checker'] = 0
-        
-    # Verifying attachments
-    if problem_info['attachments'] == 1:
-        try:
-            s3.Object(ATTACHMENTS, f'{problemName}.zip').load()
-            remarks['attachments'] = 'ok, attachments found!'
-        except ClientError as e:
-            remarks['attachments'] = 'No attachments found!'
-            verdicts['attachments'] = 0
-        
-    # Verifying grader
-    if problem_info['problem_type'] != 'Batch':
-        hasHeader = True
-        hasGrader = True
-        try:
-            s3.Object(GRADERS, f'{problemName}/grader.cpp').load()
-        except ClientError as e:
-            hasGrader = False
-        
-        if problem_info['problem_type'] == 'Interactive':
-            try:
-                s3.Object(GRADERS, f'{problemName}/{problemName}.h').load()
-            except ClientError as e:
-                hasHeader = False
-        
-        else:
-            try:
-                s3.Object(GRADERS, f"{problemName}/{problem_info['nameA']}.h").load()
-                s3.Object(GRADERS, f"{problemName}/{problem_info['nameB']}.h").load()
-            except ClientError as e:
-                hasHeader = False
-        
-        if hasGrader and hasHeader:
-            remarks['grader'] = 'ok, both header and grader file found!'
-        elif hasGrader:
-            remarks['grader'] = 'No header file found!'
-            verdicts['grader'] = 0
-        elif hasHeader:
-            remarks['grader'] = 'No grader found!'
-            verdicts['grader'] = 0
-        else:
-            remarks['grader'] = 'No grader and header file found!'
-            verdicts['grader'] = 0
-    
-    # Checking score
-    totalScore = 0 
-    remarks['scoring'] = f'ok, total score is 100!'
-    for i in problem_info['subtaskScores']:
-        if i < 0:
-            remarks['scoring'] = f'Subtask score cannot be negative!'
-            verdicts['scoring'] = 0
-        totalScore += i
-    if totalScore != 100:
-        remarks['scoring'] = f'Total Score is {totalScore}!'
-        verdicts['scoring'] = 0
-        
-    # Checking subtasks
-    testcaseCount = testcaseCount()
-    maxValue = 0
-    memo = [0 for i in range(max(testcaseCount+1,2000))]
-    for i in problem_info['subtaskDependency']:
-        maxValue = max(maxValue,verifyDependency(i,memo))
-    if maxValue > testcaseCount:
-        remarks['subtasks'] = f'Subtasks reflect {maxValue} testcases while there are {testcaseCount} testcases!'
-        verdicts['subtasks'] = 0
-    elif sum(memo) != testcaseCount:
-        fail = -1
-        for i in range(1,testcaseCount+1):
-            if not memo[i]: 
-                fail = i
-                break
-        remarks['subtasks'] = f'Testcase {fail} not in any subtask!'
-        verdicts['subtasks'] = 0
-    
-    # Checking testdata
-    validation = [[0,0] for i in range(testcaseCount)]
-    firstFail = ''
-    numFail = 0
-    tx = 0
-    
-    for obj in testdata_bucket.objects.filter(Prefix=f'{problemName}/'):
-        print(obj)
-        tx += 1
-        filename = obj.key
-        x = filename.split('/')[1].split('.')
-        if x[0] == '':
-            continue
-        ind = int(x[0])-1
-        if ind>=testcaseCount:continue
-        if(x[1] == 'in'):
-            validation[ind][0]=1
-        else:
-            validation[ind][1]=1
-            
-    for i in range(testcaseCount):
-        if validation[i][0] == 0:
-            if numFail == 0:
-                firstFail = f'{i+1}.in'
-            numFail += 1
-        if validation[i][1] == 0:
-            if numFail == 0:
-                firstFail = f'{i+1}.out'
-            numFail += 1
-            
-    if numFail:
-        verdicts['testdata'] = 0
-        remarks['testdata'] = f'{numFail} testcases missing, including file {firstFail}!'
-    else:
-        remarks['testdata'] = f'ok, {testcaseCount} testcases found!'
-        
-    complete = 1
-    for i in verdicts.keys():
-        if verdicts[i] != 1: complete = 0
-    
-    problems_table.update_item(
-        Key = {'problemName':problemName},
-        UpdateExpression = f'set validated=:a,verdicts=:b,remarks=:c',
-        ExpressionAttributeValues={':a':complete,':b':verdicts,':c':remarks}
-        # ExpressionAttributeNames={'#b':'testcaseCount'}
-    )
-        
-    return {
-        'statusCode':200,
-        'verdicts':verdicts,
-        'remarks':remarks
-    }
+	remarks= {
+		'testdata': 'Ok',
+		'attachments': 'Ok, no attachments required',
+		'checker': 'Ok, no checker required',
+		'statement': 'Ok',
+		'grader': 'Ok, no grader required',
+		'subtasks': 'Ok',
+		'scoring': 'Ok'
+	}
+	verdicts={
+		'testdata': 1,
+		'attachments' : 1,
+		'checker': 1,
+		'statement': 1,
+		'grader': 1,
+		'subtasks': 1,
+		'scoring': 1
+	}
+	
+	problemInfo = awstools.getProblemInfo(problemName)
+	
+	# Verifying statements
+	hasHTML = awstools.hasFile(STATEMENTS_BUCKET, f'{problemName}.html')
+	hasPDF = awstools.hasFile(STATEMENTS_BUCKET, f'{problemName}.pdf')
+	
+	if hasHTML and hasPDF:
+		remarks['statement'] = 'Ok, Both PDF and HTML statements found!'
+	elif hasHTML:
+		remarks['statement'] = 'Ok, HTML statement found!'
+	elif hasPDF:
+		remarks['statement'] = 'Ok, PDF statement found!'
+	else:
+		remarks['statement'] = 'No statement found!'
+		verdicts['statement'] = 0
+	
+	# Verifying checker
+	if problemInfo['customChecker'] == 1:
+		if awstools.hasFile(CHECKERS_BUCKET, f'compiled/{problemName}'):
+			remarks['checker'] = 'Ok, checker found!'
+		else:
+			remarks['checker'] = 'No checker found!'
+			verdicts['checker'] = 0
+		
+	# Verifying attachments
+	if problemInfo['attachments'] == 1:
+		if awstools.hasFile(ATTACHMENTS_BUCKET, f'{problemName}.zip'):
+			remarks['attachments'] = 'Ok, attachments found!'
+		else:
+			remarks['attachments'] = 'No attachments found!'
+			verdicts['attachments'] = 0
+		
+	# Verifying grader
+	if problemInfo['problem_type'] != 'Batch':
+		hasHeader = True
+		hasGrader = awstools.hasFile(GRADERS_BUCKET, f'{problemName}/grader.cpp')
+		
+		if problemInfo['problem_type'] == 'Interactive':
+			if not awstools.hasFile(GRADERS_BUCKET, f'{problemName}/{problemName}.h'):
+				hasHeader = False
+		
+		elif problemInfo['problem_type'] == 'Communication':
+			if not (awstools.hasFile(GRADERS_BUCKET, f"{problemName}/{problemInfo['nameA']}.h" or awstools.hasFile(GRADERS_BUCKET, f"{problemName}/{problemInfo['nameB']}.h"))):
+				hasHeader = False
+		
+		if hasGrader and hasHeader:
+			remarks['grader'] = 'Ok, both header and grader file found!'
+		elif hasGrader:
+			remarks['grader'] = 'No header file found!'
+			verdicts['grader'] = 0
+		elif hasHeader:
+			remarks['grader'] = 'No grader found!'
+			verdicts['grader'] = 0
+		else:
+			remarks['grader'] = 'No grader and header file found!'
+			verdicts['grader'] = 0
+	
+	# Checking score
+	totalScore = 0 
+	remarks['scoring'] = f'Ok, total score is 100!'
+	for i in problemInfo['subtaskScores']:
+		if i < 0:
+			remarks['scoring'] = f'Subtask score cannot be negative!'
+			verdicts['scoring'] = 0
+		totalScore += i
+	if totalScore != 100:
+		remarks['scoring'] = f'Total Score is {totalScore}!'
+		verdicts['scoring'] = 0
+		
+	# Checking subtasks
+	testcaseFiles = awstools.getTestcaseFiles(prefix = f'{problemName}/')
+	testcaseCount = 0
+	maxValue = 0
+	filenames = []
+
+	for obj in testcaseFiles:
+		filename = obj.key
+		# Split by / to remove the folder name, split '.' to separate in and out
+		x = filename.split('/')[1].split('.')
+		if x[0] == '':
+			continue
+		filenames.append(x)			
+		testcaseCount += 1
+
+	memo = [0 for i in range(testcaseCount)]
+	# VERIFYING SUBTASK DEPENDENCY
+	for i in problemInfo['subtaskDependency']:
+		maxValue = max(maxValue,verifyDependency(i,memo))
+		# Passing memo in as a pointer (python passess objects by reference)
+	if maxValue > testcaseCount:
+		remarks['subtasks'] = f'Subtasks reflect {maxValue} testcases while there are {testcaseCount} testcases!'
+		verdicts['subtasks'] = 0
+	elif sum(memo) != testcaseCount:
+		fail = -1
+		for i in range(1,testcaseCount+1):
+			if not memo[i]: 
+				fail = i
+				break
+		remarks['subtasks'] = f'Testcase {fail} not in any subtask!'
+		verdicts['subtasks'] = 0
+	
+	# Checking testdata
+	validation = [[0,0] for i in range(testcaseCount)]
+	numFail = 0
+	
+	for x in filenames:
+		ind = int(x[0])-1
+		if ind>=testcaseCount:continue
+		if(x[1] == 'in'):
+			validation[ind][0]=1
+		else:
+			validation[ind][1]=1
+	
+	firstFail = ''
+	for i in range(testcaseCount):
+		if validation[i][0] == 0:
+			if numFail == 0:
+				firstFail = f'{i+1}.in'
+			numFail += 1
+		if validation[i][1] == 0:
+			if numFail == 0:
+				firstFail = f'{i+1}.out'
+			numFail += 1
+			
+	if numFail:
+		verdicts['testdata'] = 0
+		remarks['testdata'] = f'{numFail} testcases missing, including file {firstFail}!'
+	else:
+		remarks['testdata'] = f'Ok, {testcaseCount} testcases found!'
+		
+	validated = 1
+	for i in verdicts.keys():
+		if verdicts[i] != 1: validated = 0
+	
+	awstools.updateResults(problemName, validated, verdicts, remarks)
+	
+	return {
+		'statusCode':200,
+		'verdicts':verdicts,
+		'remarks':remarks
+	}
 

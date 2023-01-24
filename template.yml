@@ -165,6 +165,17 @@ Resources:
   #     Policies:
   #       - AmazonDynamoDBReadOnlyAccess
   #       - AmazonS3FullAccess
+  GradingStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      Name:
+        Fn::Sub:
+          ${JudgeName}-grading
+      DefinitionUri: state-machine/grading.asl.json
+      DefinitionSubstitutions:
+        ProblemInitFunctionArn: !GetAtt GraderProblemInitFunction.Arn
+      Policies:
+        - AWSLambdaRole
   AttachmentsBucket:
     Type: AWS::S3::Bucket
     Properties:

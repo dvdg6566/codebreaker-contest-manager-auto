@@ -128,6 +128,8 @@ def lambda_handler(event, context):
 			continue
 		filenames.append(x)			
 		testcaseCount += 1
+	# Each testcase should have in and out files
+	testcaseCount = int(testcaseCount/2) 
 
 	memo = [0 for i in range(testcaseCount)]
 	# VERIFYING SUBTASK DEPENDENCY

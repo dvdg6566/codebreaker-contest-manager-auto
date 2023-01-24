@@ -131,7 +131,7 @@ def lambda_handler(event, context):
 	# Each testcase should have in and out files
 	testcaseCount = int(testcaseCount/2) 
 
-	memo = [0 for i in range(testcaseCount)]
+	memo = [0 for i in range(testcaseCount+1)]
 	# VERIFYING SUBTASK DEPENDENCY
 	for i in problemInfo['subtaskDependency']:
 		maxValue = max(maxValue,verifyDependency(i,memo))

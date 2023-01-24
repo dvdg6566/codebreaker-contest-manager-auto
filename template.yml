@@ -522,6 +522,10 @@ Resources:
           FromPort: 80
           IpProtocol: 'tcp'
           ToPort: 80
+        - CidrIp: 0.0.0.0/0
+          FromPort: 8000
+          IpProtocol: 'tcp'
+          ToPort: 8000
   WebServer:
     Type: AWS::EC2::Instance
     DependsOn: WebServerIamProfile
@@ -540,6 +544,7 @@ Resources:
         Fn::Base64: 
           !Sub | 
             #!/bin/bash
+            apt update
             apt install python3-pip -y
             apt install python3-venv -y
             apt install awscli -y
@@ -547,6 +552,58 @@ Resources:
             cd home/ubuntu
             git clone https://github.com/dvdg6566/codebreaker-contest-manager
             cd codebreaker-contest-manager
+
+            python3 -m venv virtualenv
+            source virtualenv/bin/activate
+            pip3 install -r requirements.txt
+
+            touch password.py
+            echo 'FLASK_SECRET_KEY = "PLACEHOLDER"' >> password.py
+
+            mkdir config
+            mkdir ~/.aws/
+
+            {
+              echo '[default]'
+              echo 'region = ap-southeast-1'
+              echo 'output = json'
+            } >> config/awsconfig
+            cp config/awsconfig ~/.aws/config
+
+            {
+              echo '[Unit]'
+              echo 'Description=Gunicorn instance for a codebreaker'
+              echo 'After=network.target'
+              echo '[Service]'
+              echo 'User=ubuntu'
+              echo 'Group=www-data'
+              echo 'WorkingDirectory=/home/ubuntu/codebreaker-contest-manager'
+              echo 'ExecStart=/home/ubuntu/codebreaker-contest-manager/virtualenv/bin/gunicorn -b localhost:8000 app:app'
+              echo 'Restart=always'
+              echo '[Install]'
+              echo 'WantedBy=multi-user.target'
+            } >> config/systemd
+            cp config/systemd /etc/systemd/system/codebreaker.service
+
+            systemctl start codebreaker
+            systemctl enable codebreaker
+            systemctl start nginx
+            systemctl enable nginx
+
+            {
+              echo 'server {'
+              echo '    listen 80 default_server;'
+              echo '    listen [::]:80 default_server;'
+              echo '    server_name codebreaker;'
+              echo '    location / {'
+              echo '        proxy_pass http://127.0.0.1:8000;'
+              echo '        include proxy_params;'
+              echo '    }'
+              echo '}'
+            } >> config/nginx
+
+            cp config/nginx /etc/nginx/sites-available/default 
+            systemctl restart nginx
   WebServerEIP:
     Type: AWS::EC2::EIP
     DependsOn: WebServer

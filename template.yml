@@ -170,6 +170,8 @@ Resources:
       DefinitionUri: state-machine/grading.asl.json
       DefinitionSubstitutions:
         ProblemInitFunctionArn: !GetAtt GraderProblemInitFunction.Arn
+        TestcaseGraderWrapperFunction: !GetAtt TestcaseGraderWrapperFunction.Arn
+        GraderProblemScorerFunctionArn: !GetAtt GraderProblemScorerFunction.Arn
       Policies:
         - AWSLambdaRole
   AttachmentsBucket:

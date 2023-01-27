@@ -43,7 +43,7 @@
               "OutputPath": "$.Payload",
               "Parameters": {
                 "Payload.$": "$",
-                "FunctionName": "arn:aws:lambda:ap-southeast-1:354145626860:function:codebreaker-compilation:$LATEST"
+                "FunctionName": "arn:aws:lambda:ap-southeast-1:354145626860:function:codebreakercontestcompilation:$LATEST"
               },
               "Retry": [
                 {
@@ -85,7 +85,7 @@
             "Resource": "arn:aws:states:::lambda:invoke",
             "Parameters": {
               "Payload.$": "$",
-              "FunctionName": "arn:aws:lambda:ap-southeast-1:354145626860:function:codebreaker-testcase-grader-wrapper:$LATEST"
+              "FunctionName": "${TestcaseGraderWrapperArn}"
             },
             "Retry": [
               {
@@ -112,7 +112,7 @@
       "Resource": "arn:aws:states:::lambda:invoke",
       "OutputPath": "$",
       "Parameters": {
-        "FunctionName": "arn:aws:lambda:ap-southeast-1:354145626860:function:codebreaker-grader-problem-scorer:$LATEST",
+        "FunctionName": "${GraderProblemScorerArn}",
         "Payload": {
           "problemName.$": "$[0].payloads[0].problemName",
           "username.$": "$[0].username",
@@ -140,7 +140,7 @@
       "Resource": "arn:aws:states:::lambda:invoke",
       "OutputPath": "$",
       "Parameters": {
-        "FunctionName": "arn:aws:lambda:ap-southeast-1:354145626860:function:codebreaker-grader-problem-scorer:$LATEST",
+        "FunctionName": "${GraderProblemScorerArn}",
         "Payload": {
           "problemName.$": "$[0].payloads[0].problemName",
           "username.$": "$[0].username",

@@ -6,8 +6,7 @@ from decimal import *
 
 judgeName = os.environ['judgeName']
 region = os.environ['AWS_REGION']
-client = boto3.client('sts') 
-accountId = client.get_caller_identity()['Account'] # Gets account Id programatically
+accountId = os.environ['ACCOUNT_ID']
 
 dynamodb = boto3.resource('dynamodb')
 lambda_client = boto3.client('lambda')
@@ -23,13 +22,13 @@ def lambda_handler(event, context):
     response = None
     if MLE <= 1024:
         response = lambda_client.invoke(
-            FunctionName = f'arn:aws:lambda:{region}:{accountId}:function:codebreaker-testcase-grader',
+            FunctionName = f'arn:aws:lambda:{region}:{accountId}:function:{judgeName}-testcase-grader',
             InvocationType='RequestResponse',
             Payload = json.dumps(event)
         )
     else:
         response = lambda_client.invoke(
-            FunctionName = f'arn:aws:lambda:{region}:{accountId}:function:codebreaker-testcase-grader-2048',
+            FunctionName = f'arn:aws:lambda:{region}:{accountId}:function:{judgeName}-testcase-grader-2048',
             InvocationType='RequestResponse',
             Payload = json.dumps(event)
         )

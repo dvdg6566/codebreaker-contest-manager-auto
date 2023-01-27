@@ -4,8 +4,7 @@ from botocore.exceptions import ClientError
 from boto3.dynamodb.conditions import Key, Attr
 
 judgeName = os.environ['judgeName']
-stsclient = boto3.client('sts')
-accountId = stsclient.get_caller_identity()['Account'] # Gets account Id programatically
+accountId = os.environ['ACCOUNT_ID']
 
 s3=boto3.resource('s3')
 dynamodb = boto3.resource('dynamodb')

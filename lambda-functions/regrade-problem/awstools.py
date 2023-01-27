@@ -7,8 +7,7 @@ from boto3.dynamodb.conditions import Key
 
 judgeName = os.environ['judgeName']
 region = os.environ['AWS_REGION']
-client = boto3.client('sts') 
-accountId = client.get_caller_identity()['Account'] # Gets account Id programatically
+accountId = os.environ['AWS_REGION']
 
 SFclient = boto3.client('stepfunctions')
 dynamodb = boto3.resource('dynamodb')

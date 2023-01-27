@@ -13,6 +13,7 @@ Globals:
     Environment:
       Variables:
         judgeName: !Ref JudgeName
+        accountId: !Ref AWS::AccountId
     Handler: lambda_function.lambda_handler
     Runtime: python3.9
 

@@ -9,7 +9,7 @@ import time
 
 def lambda_handler(event, context):
 	problemName = event['problemName']
-	submissionId = event['submissionId']
+	subId = event['submissionId']
 	username = event['username']
 	compileError = event['compileError']
 	compileErrorMessage = event['compileErrorMessage']
@@ -18,7 +18,7 @@ def lambda_handler(event, context):
 	# Just update the compile error message in Dynamo
 
 	if compileError:
-		awstools.updateCE(submissionId=submissionId, compileErrorMessage=compileErrorMessage)
+		awstools.updateCE(subId=subId, compileErrorMessage=compileErrorMessage)
 		return {'status':200}
 
 	problemInfo = awstools.getProblemInfo(problemName)        

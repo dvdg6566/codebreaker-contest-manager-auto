@@ -15,14 +15,13 @@ lambda_client = boto3.client('lambda')
 
 def getProblemScores(username):
     response = users_table.query(
-        IndexName = 'usernameIndex',
-        ProjectionExpression = 'problemScores'
+        ProjectionExpression = 'problemScores',
         KeyConditionExpression=Key('username').eq(username),
     )
-    if len(response['Items'] != 1): return None
+    if len(response['Items']) != 1: return None
     return response['Items'][0]
 
-def getProblemInfo(problem):
+def getProblemInfo(problemName):
     response = problems_table.query(
         KeyConditionExpression = Key('problemName').eq(problemName)
     )
@@ -36,25 +35,25 @@ def getSubmission(subId):
     if len(response['Items']) != 1: return None
     return response['Items'][0]
 
-def updateSubmission(subId, maxTime, maxMemory, subtaskScores, totalScore)
+def updateSubmission(subId, maxTime, maxMemory, subtaskScores, totalScore):
     submissions_table.update_item(
         Key={'subId':subId},
         UpdateExpression = f'set maxTime = :maxTime, maxMemory=:maxMemory,subtaskScores=:subtaskScores,totalScore=:totalScore',
         ExpressionAttributeValues={':maxTime':maxTime,':maxMemory':maxMemory,':subtaskScores':subtaskScores,':totalScore':totalScore}
     )
 
-def updateCE(submissionId, compileErrorMessage):
+def updateCE(subId, compileErrorMessage):
     submissions_table.update_item(
-        Key={'subId':submissionId},
+        Key={'subId':subId},
         UpdateExpression = f'set compileErrorMessage = :compileErrorMessage',
         ExpressionAttributeValues={':compileErrorMessage':compileErrorMessage}
     )
 
-def getStitchSubmissions(problem, username):
+def getStitchSubmissions(problemName, username):
     # Gets list of all submissions made by user to problem
     submissions = submissions_table.query(
         IndexName = 'problemIndex',
-        KeyConditionExpression = Key('problemName').eq(problem),
+        KeyConditionExpression = Key('problemName').eq(problemName),
         ProjectionExpression = 'subtaskScores',
         FilterExpression = Attr('username').eq(username),
         ScanIndexForward = False

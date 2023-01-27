@@ -4,7 +4,7 @@ from botocore.exceptions import ClientError
 from boto3.dynamodb.conditions import Key, Attr
 
 judgeName = os.environ['judgeName']
-accountId = os.environ['ACCOUNT_ID']
+accountId = os.environ['AWS_ACCOUNT_ID']
 
 s3=boto3.resource('s3')
 dynamodb = boto3.resource('dynamodb')

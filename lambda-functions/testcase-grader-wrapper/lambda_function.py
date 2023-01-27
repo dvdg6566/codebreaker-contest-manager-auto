@@ -6,7 +6,7 @@ from decimal import *
 
 judgeName = os.environ['judgeName']
 region = os.environ['AWS_REGION']
-accountId = os.environ['ACCOUNT_ID']
+accountId = os.environ['AWS_ACCOUNT_ID']
 
 dynamodb = boto3.resource('dynamodb')
 lambda_client = boto3.client('lambda')

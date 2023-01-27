@@ -42,9 +42,9 @@ def hasFile(bucket, filepath):
 def getTestcaseFiles(prefix):
 	return testdata_bucket.objects.filter(Prefix=prefix)
 
-def updateResults(problemName, validated, verdicts, remarks):
+def updateResults(problemName, validated, verdicts, remarks, testcaseCount):
 	problems_table.update_item(
 		Key = {'problemName':problemName},
-		UpdateExpression = f'set validated=:a,verdicts=:b,remarks=:c',
-		ExpressionAttributeValues={':a':validated,':b':verdicts,':c':remarks}
+		UpdateExpression = f'set validated=:a,verdicts=:b,remarks=:c,testcaseCount=:d',
+		ExpressionAttributeValues={':a':validated,':b':verdicts,':c':remarks,':d':testcaseCount}
 	)

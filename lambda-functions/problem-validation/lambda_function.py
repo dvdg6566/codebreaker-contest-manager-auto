@@ -181,7 +181,7 @@ def lambda_handler(event, context):
 	for i in verdicts.keys():
 		if verdicts[i] != 1: validated = 0
 	
-	awstools.updateResults(problemName, validated, verdicts, remarks)
+	awstools.updateResults(problemName, validated, verdicts, remarks, testcaseCount)
 	
 	return {
 		'statusCode':200,

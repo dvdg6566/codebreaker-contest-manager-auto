@@ -19,9 +19,6 @@ def lambda_handler(event, context):
     username = event['username']
     subTime = event['submissionTime']
     language = event['language'] # Language should be from "py" or "cpp"
-    stitch = event['stitch']
-    regrade = event['regrade']
-    regradeall = event['regradeall']
     
     response= problems_table.query(
         KeyConditionExpression = Key('problemName').eq(problemName)
@@ -91,9 +88,6 @@ def lambda_handler(event, context):
         'status': 200,
         'payloads': [],
         'username': username,
-        'regradeall': regradeall,
-        'stitch': stitch,
-        'regrade': regrade
     }
     
     for i in range(1, testcaseNumber + 1):

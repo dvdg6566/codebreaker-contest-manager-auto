@@ -172,6 +172,7 @@ Resources:
         ProblemInitFunctionArn: !GetAtt GraderProblemInitFunction.Arn
         TestcaseGraderWrapperFunction: !GetAtt TestcaseGraderWrapperFunction.Arn
         GraderProblemScorerFunctionArn: !GetAtt GraderProblemScorerFunction.Arn
+      Type: EXPRESS
       Policies:
         - AWSLambdaRole
   AttachmentsBucket:

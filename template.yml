@@ -151,17 +151,13 @@ Resources:
         Location: 'https://github.com/singaporezoo/codebreaker-compiler'
         BuildSpec: buildspec.yml
   # CompilerFunction:
-  #   ProblemVerificationFunction:
-  #   Type: AWS::Serverless::Function
+  #   Type: AWS::Lambda::Function
   #   Properties:
   #     FunctionName: 
   #       Fn::Sub: ${JudgeName}-problem-verification
   #     PackageType: Image
   #     ImageUri: 
-  #       Fn::Join:
-  #         - ':'
-  #         - - !GetAtt CompilerECRRepository.RepositoryUri
-  #           - 'latest'
+  #       - 354145626860.dkr.ecr.ap-southeast-1.amazonaws.com/codebreakercontest-compiler-repository:latest
   #     Policies:
   #       - AmazonDynamoDBReadOnlyAccess
   #       - AmazonS3FullAccess
@@ -294,6 +290,18 @@ Resources:
         - AttributeName: contestId
           KeyType: HASH
       BillingMode: PAY_PER_REQUEST
+  GlobalCountersTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName:
+        Fn::Sub: ${JudgeName}-global-counters
+      AttributeDefinitions:
+        - AttributeName: counterId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: counterId
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
   ProblemsTable:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -357,7 +365,7 @@ Resources:
               - totalScore
               - language
               - compileErrorMessage
-  usersTable:
+  UsersTable:
     Type: AWS::DynamoDB::Table
     Properties:
       TableName:
@@ -539,7 +547,11 @@ Resources:
           ToPort: 8000
   WebServer:
     Type: AWS::EC2::Instance
-    DependsOn: WebServerIamProfile
+    DependsOn: 
+      - WebServerIamProfile
+      - GlobalCountersTable
+    # Depends on global counters because the bootstrap script initialises global counter values
+    # TODO: Add dependncy on cognito and users table, then create initial admin user from bootstrap
     Properties:
       InstanceType: t2.nano
       ImageId: ami-0b7e55206a0a22afc # Ubuntu 22.04 x64

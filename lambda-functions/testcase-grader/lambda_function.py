@@ -10,9 +10,9 @@ from cmscmp import white_diff_step
 
 judgeName = os.environ['judgeName']
 s3 = boto3.resource('s3')
-submissions_bucket = s3.Bucket("codebreaker-submissions")
-testdata_bucket = s3.Bucket("codebreaker-testdata")
-checkers_bucket = s3.Bucket("codebreaker-checkers")
+submissions_bucket = s3.Bucket(f"{judgeName}-submissions")
+testdata_bucket = s3.Bucket(f"{judgeName}-testdata")
+checkers_bucket = s3.Bucket(f"{judgeName}-checkers")
 
 def limit_memory(maxsize): 
     soft, hard = resource.getrlimit(resource.RLIMIT_AS) 
@@ -96,7 +96,7 @@ def lambda_handler(event, context):
         result['verdict'] = 'MLE'
     else:
         outputPath = problemName + '/' + str(testcaseNumber) + '.out'
-        s3.Bucket("codebreaker-testdata").download_file(outputPath,OUTPUT_FILE)
+        testdata_bucket.download_file(outputPath,OUTPUT_FILE)
 
         if customChecker == 0:
             res = white_diff_step("comparison_file",OUTPUT_FILE)

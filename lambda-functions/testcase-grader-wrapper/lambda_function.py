@@ -13,11 +13,9 @@ lambda_client = boto3.client('lambda')
 submissions_table = dynamodb.Table(f'{judgeName}-submissions')
 
 def lambda_handler(event, context):
-    submissionHash = uuid.uuid4()
     subId = event["submissionId"]
     testcaseNumber = event["testcaseNumber"]
     MLE = float(event["memoryLimit"])
-    language = event["language"]
     
     response = None
     if MLE <= 1024:

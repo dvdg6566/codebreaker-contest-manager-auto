@@ -257,9 +257,13 @@ Resources:
       AttributeDefinitions:
         - AttributeName: announceId
           AttributeType: S
+        - AttributeName: announceTime
+          AttributeType: S
       KeySchema:
         - AttributeName: announceId
           KeyType: HASH
+        - AttributeName: announceTime
+          KeyType: RANGE
       BillingMode: PAY_PER_REQUEST
   ClarificationsTable:
     Type: AWS::DynamoDB::Table

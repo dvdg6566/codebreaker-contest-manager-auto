@@ -249,22 +249,22 @@ Resources:
         BlockPublicPolicy: True
         IgnorePublicAcls: True
         RestrictPublicBuckets: True
-  AnnouncementsTable:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      TableName:
-        Fn::Sub: ${JudgeName}-announcements
-      AttributeDefinitions:
-        - AttributeName: announcementId
-          AttributeType: S
-        - AttributeName: announceTime
-          AttributeType: S
-      KeySchema:
-        - AttributeName: announcementId
-          KeyType: HASH
-        - AttributeName: announceTime
-          KeyType: RANGE
-      BillingMode: PAY_PER_REQUEST
+  # AnnouncementsTable:
+  #   Type: AWS::DynamoDB::Table
+  #   Properties:
+  #     TableName:
+  #       Fn::Sub: ${JudgeName}-announcements
+  #     AttributeDefinitions:
+  #       - AttributeName: announcementId
+  #         AttributeType: S
+  #       - AttributeName: announcementTime
+  #         AttributeType: S
+  #     KeySchema:
+  #       - AttributeName: announcementId
+  #         KeyType: HASH
+  #       - AttributeName: announcementTime
+  #         KeyType: RANGE
+  #     BillingMode: PAY_PER_REQUEST
   ClarificationsTable:
     Type: AWS::DynamoDB::Table
     Properties:

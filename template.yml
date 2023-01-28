@@ -255,12 +255,12 @@ Resources:
       TableName:
         Fn::Sub: ${JudgeName}-announcements
       AttributeDefinitions:
-        - AttributeName: announceId
+        - AttributeName: announcementId
           AttributeType: S
         - AttributeName: announceTime
           AttributeType: S
       KeySchema:
-        - AttributeName: announceId
+        - AttributeName: announcementId
           KeyType: HASH
         - AttributeName: announceTime
           KeyType: RANGE

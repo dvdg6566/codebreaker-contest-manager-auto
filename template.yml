@@ -249,43 +249,34 @@ Resources:
         BlockPublicPolicy: True
         IgnorePublicAcls: True
         RestrictPublicBuckets: True
-  # AnnouncementsTable:
-  #   Type: AWS::DynamoDB::Table
-  #   Properties:
-  #     TableName:
-  #       Fn::Sub: ${JudgeName}-announcements
-  #     AttributeDefinitions:
-  #       - AttributeName: announcementId
-  #         AttributeType: S
-  #       - AttributeName: announcementTime
-  #         AttributeType: S
-  #     KeySchema:
-  #       - AttributeName: announcementId
-  #         KeyType: HASH
-  #       - AttributeName: announcementTime
-  #         KeyType: RANGE
-  #     BillingMode: PAY_PER_REQUEST
+  AnnouncementsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName:
+        Fn::Sub: ${JudgeName}-announcements
+      AttributeDefinitions:
+        - AttributeName: announcementId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: announcementId
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
   ClarificationsTable:
     Type: AWS::DynamoDB::Table
     Properties:
       TableName:
         Fn::Sub: ${JudgeName}-clarifications
       AttributeDefinitions:
-        - AttributeName: clarificationId
-          AttributeType: N
         - AttributeName: askedBy
           AttributeType: S
+        - AttributeName: clarificationTime
+          AttributeType: S
       KeySchema:
-        - AttributeName: clarificationId
+        - AttributeName: askedBy
           KeyType: HASH
+        - AttributeName: clarificationTime
+          KeyType: RANGE
       BillingMode: PAY_PER_REQUEST
-      GlobalSecondaryIndexes:
-        - IndexName: askedByIndex
-          KeySchema:
-            - AttributeName: askedBy
-              KeyType: HASH
-          Projection:
-            ProjectionType: ALL
   ContestsTable:
     Type: AWS::DynamoDB::Table
     Properties:

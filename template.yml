@@ -419,6 +419,54 @@ Resources:
         Fn::Sub: ${JudgeName}-websocket
       ProtocolType: WEBSOCKET
       RouteSelectionExpression: "$request.body.action"
+  WebSocketConnectLambdaPermission: 
+    Type: AWS::Lambda::Permission
+    DependsOn:
+      - WebSocket
+      - WebsocketConnectionsFunction
+    Properties:
+      FunctionName: !GetAtt WebsocketConnectionsFunction.Arn
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub:
+          arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocket}/*/$connect
+  WebSocketDisonnectLambdaPermission: 
+    Type: AWS::Lambda::Permission
+    DependsOn:
+      - WebSocket
+      - WebsocketConnectionsFunction
+    Properties:
+      FunctionName: !GetAtt WebsocketConnectionsFunction.Arn
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub:
+          arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocket}/*/$disonnect
+  WebSocketMessageLambdaPermission: 
+    Type: AWS::Lambda::Permission
+    DependsOn:
+      - WebSocket
+      - WebsocketConnectionsFunction
+    Properties:
+      FunctionName: !GetAtt WebsocketConnectionsFunction.Arn
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub:
+          arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocket}/*/message
+  WebSocketDefaultLambdaPermission: 
+    Type: AWS::Lambda::Permission
+    DependsOn:
+      - WebSocket
+      - WebsocketConnectionsFunction
+    Properties:
+      FunctionName: !GetAtt WebsocketConnectionsFunction.Arn
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Sub:
+          arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocket}/*/$default
   ConnectRoute:
     Type: AWS::ApiGatewayV2::Route
     Properties:
@@ -492,7 +540,7 @@ Resources:
   WebSocketStage:
     Type: AWS::ApiGatewayV2::Stage
     Properties:
-      StageName: Production
+      StageName: production
       Description: Production stage
       DeploymentId: !Ref WebSocketDeployment
       ApiId: !Ref WebSocket

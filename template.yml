@@ -5,6 +5,7 @@ Parameters:
     Description: "Insert name of Codebreaker Clone"
     Type: "String"
     Default: "codebreakercontest"
+  # TODO: Add Timezone and initialisation email
 
 Globals:
   Function:

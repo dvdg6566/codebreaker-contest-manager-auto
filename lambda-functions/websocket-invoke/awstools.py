@@ -18,7 +18,7 @@ def getAllAdmins():
     # For new clarification notification
     return []
 
-def getUser():
+def getUser(username):
     # For clarification response notification
     return []
 

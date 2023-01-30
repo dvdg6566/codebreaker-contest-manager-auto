@@ -33,5 +33,5 @@ def updateUserDetails(connectionId, username, accountRole):
     webSocketTable.update_item(
         Key = {'connectionId': connectionId},
         UpdateExpression = f'set username=:u, accountRole=:r',
-        ExpressionAttributeValues = {':u': 'username', ':r': 'accountRole'}
+        ExpressionAttributeValues = {':u': username, ':r': accountRole}
     )

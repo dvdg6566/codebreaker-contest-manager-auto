@@ -432,7 +432,7 @@ Resources:
       SourceArn:
         Fn::Sub:
           arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocket}/*/$connect
-  WebSocketDisonnectLambdaPermission: 
+  WebSocketDisconnectLambdaPermission: 
     Type: AWS::Lambda::Permission
     DependsOn:
       - WebSocket
@@ -443,7 +443,7 @@ Resources:
       Principal: apigateway.amazonaws.com
       SourceArn:
         Fn::Sub:
-          arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocket}/*/$disonnect
+          arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebSocket}/*/$disconnect
   WebSocketMessageLambdaPermission: 
     Type: AWS::Lambda::Permission
     DependsOn:

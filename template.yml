@@ -38,7 +38,7 @@ Resources:
       Policies:
         - AmazonDynamoDBFullAccess
         - AWSStepFunctionsFullAccess
-  WebsocketInvokeFunction:
+  WebSocketInvokeFunction:
     DependsOn: WebSocket
     Type: AWS::Serverless::Function
     Properties:
@@ -48,12 +48,11 @@ Resources:
       CodeUri: lambda-functions/websocket-invoke
       Policies:
         - AmazonAPIGatewayInvokeFullAccess
-        - AmazonDynamoDBReadOnlyAccess
       Environment:
         Variables:
           WebSocketURI:
             Fn::Sub: https://${WebSocket}.execute-api.${AWS::Region}.amazonaws.com/production
-  WebsocketConnectionsFunction:
+  WebSocketConnectionsFunction:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName:
@@ -87,18 +86,10 @@ Resources:
       Policies:
         - AmazonDynamoDBFullAccess
         - AWSLambdaRole
-  TestcaseGrader2048Function:
-    Type: AWS::Serverless::Function
-    Properties:
-      MemorySize: 2600 # Larger memory to accomodate 2048MB Memory limit problems
-      FunctionName:
-        Fn::Sub: ${JudgeName}-testcase-grader-2048
-      CodeUri: lambda-functions/testcase-grader
-      Policies:
-        - AmazonS3ReadOnlyAccess
   TestcaseGraderFunction:
     Type: AWS::Serverless::Function
     Properties:
+      MemorySize: 2560 # Extra memory abovce 2048
       FunctionName:
         Fn::Sub: ${JudgeName}-testcase-grader
       CodeUri: lambda-functions/testcase-grader
@@ -169,11 +160,23 @@ Resources:
       Name:
         Fn::Sub:
           ${JudgeName}-grading
-      DefinitionUri: state-machine/grading.asl.json
+      DefinitionUri: state-machines/grading.asl.json
       DefinitionSubstitutions:
         ProblemInitFunctionArn: !GetAtt GraderProblemInitFunction.Arn
         TestcaseGraderWrapperFunctionArn: !GetAtt TestcaseGraderWrapperFunction.Arn
         ProblemScorerFunctionArn: !GetAtt GraderProblemScorerFunction.Arn
+      Type: EXPRESS
+      Policies:
+        - AWSLambdaRole
+  WebSocketStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      Name: 
+        Fn::Sub:
+          ${JudgeName}-websocket
+      DefinitionUri: state-machines/websocket.asl.json
+      DefinitionSubstitutions:
+        WebSocketInvokeFunctionArn: !GetAtt WebSocketInvokeFunction.Arn
       Type: EXPRESS
       Policies:
         - AWSLambdaRole
@@ -394,19 +397,11 @@ Resources:
           KeyType: HASH
       BillingMode: PAY_PER_REQUEST
       GlobalSecondaryIndexes:
-        - IndexName: accountRoleIndex
+        - IndexName: accountRoleUsernameIndex
           KeySchema:
             - AttributeName: accountRole
               KeyType: HASH
-            - AttributeName: connectionId
-              KeyType: RANGE
-          Projection:
-            ProjectionType: ALL
-        - IndexName: usernameIndex
-          KeySchema:
             - AttributeName: username
-              KeyType: HASH
-            - AttributeName: connectionId
               KeyType: RANGE
           Projection:
             ProjectionType: ALL
@@ -424,9 +419,9 @@ Resources:
     Type: AWS::Lambda::Permission
     DependsOn:
       - WebSocket
-      - WebsocketConnectionsFunction
+      - WebSocketConnectionsFunction
     Properties:
-      FunctionName: !GetAtt WebsocketConnectionsFunction.Arn
+      FunctionName: !GetAtt WebSocketConnectionsFunction.Arn
       Action: lambda:InvokeFunction
       Principal: apigateway.amazonaws.com
       SourceArn:
@@ -436,9 +431,9 @@ Resources:
     Type: AWS::Lambda::Permission
     DependsOn:
       - WebSocket
-      - WebsocketConnectionsFunction
+      - WebSocketConnectionsFunction
     Properties:
-      FunctionName: !GetAtt WebsocketConnectionsFunction.Arn
+      FunctionName: !GetAtt WebSocketConnectionsFunction.Arn
       Action: lambda:InvokeFunction
       Principal: apigateway.amazonaws.com
       SourceArn:
@@ -448,9 +443,9 @@ Resources:
     Type: AWS::Lambda::Permission
     DependsOn:
       - WebSocket
-      - WebsocketConnectionsFunction
+      - WebSocketConnectionsFunction
     Properties:
-      FunctionName: !GetAtt WebsocketConnectionsFunction.Arn
+      FunctionName: !GetAtt WebSocketConnectionsFunction.Arn
       Action: lambda:InvokeFunction
       Principal: apigateway.amazonaws.com
       SourceArn:
@@ -460,9 +455,9 @@ Resources:
     Type: AWS::Lambda::Permission
     DependsOn:
       - WebSocket
-      - WebsocketConnectionsFunction
+      - WebSocketConnectionsFunction
     Properties:
-      FunctionName: !GetAtt WebsocketConnectionsFunction.Arn
+      FunctionName: !GetAtt WebSocketConnectionsFunction.Arn
       Action: lambda:InvokeFunction
       Principal: apigateway.amazonaws.com
       SourceArn:
@@ -480,7 +475,7 @@ Resources:
       Target: !Join
         - '/'
         - - 'integrations'
-          - !Ref WeSocketIntegration
+          - !Ref WebSocketIntegration
   DisconnectRoute:
     Type: AWS::ApiGatewayV2::Route
     Properties:
@@ -493,7 +488,7 @@ Resources:
       Target: !Join
         - '/'
         - - 'integrations'
-          - !Ref WeSocketIntegration
+          - !Ref WebSocketIntegration
   MessageRoute:
     Type: AWS::ApiGatewayV2::Route
     Properties:
@@ -506,7 +501,7 @@ Resources:
       Target: !Join
         - '/'
         - - 'integrations'
-          - !Ref WeSocketIntegration
+          - !Ref WebSocketIntegration
   DefaultRoute:
     Type: AWS::ApiGatewayV2::Route
     Properties:
@@ -519,8 +514,8 @@ Resources:
       Target: !Join
         - '/'
         - - 'integrations'
-          - !Ref WeSocketIntegration
-  WeSocketIntegration:
+          - !Ref WebSocketIntegration
+  WebSocketIntegration:
     Type: AWS::ApiGatewayV2::Integration
     Properties:
       ApiId: !Ref WebSocket
@@ -528,7 +523,7 @@ Resources:
       IntegrationType: AWS_PROXY
       IntegrationUri: 
         Fn::Sub:
-          arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${WebsocketConnectionsFunction.Arn}/invocations
+          arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${WebSocketConnectionsFunction.Arn}/invocations
   WebSocketDeployment:
     Type: AWS::ApiGatewayV2::Deployment
     DependsOn:

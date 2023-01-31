@@ -17,19 +17,11 @@ def lambda_handler(event, context):
     testcaseNumber = event["testcaseNumber"]
     MLE = float(event["memoryLimit"])
     
-    response = None
-    if MLE <= 1024:
-        response = lambda_client.invoke(
-            FunctionName = f'arn:aws:lambda:{region}:{accountId}:function:{judgeName}-testcase-grader',
-            InvocationType='RequestResponse',
-            Payload = json.dumps(event)
-        )
-    else:
-        response = lambda_client.invoke(
-            FunctionName = f'arn:aws:lambda:{region}:{accountId}:function:{judgeName}-testcase-grader-2048',
-            InvocationType='RequestResponse',
-            Payload = json.dumps(event)
-        )
+    response = lambda_client.invoke(
+        FunctionName = f'arn:aws:lambda:{region}:{accountId}:function:{judgeName}-testcase-grader',
+        InvocationType='RequestResponse',
+        Payload = json.dumps(event)
+    )
         
     result = json.loads(response['Payload'].read())
 

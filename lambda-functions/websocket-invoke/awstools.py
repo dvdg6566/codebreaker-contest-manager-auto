@@ -23,7 +23,11 @@ def getUser(username):
     return []
 
 def invoke(connectionId, body):
-    apigateway.post_to_connection(
-        ConnectionId = connectionId,
-        Data = json.dumps(body)
-    )
+    try:
+        apigateway.post_to_connection(
+            ConnectionId = connectionId,
+            Data = json.dumps(body)
+        )
+    except: 
+    # If posting fails for whatever reason, just ignore
+        pass

@@ -8,9 +8,9 @@ def lambda_handler(event, context):
     connectionIds = []
     if notificationType == 'announce':
         connectionIds = awstools.getAllConnections()
-    elif notificationType == 'newclarification':
+    elif notificationType == 'postclarification':
         connectionIds = awstools.getAllAdmins()
-    elif notificationType == 'answeredclarification':
+    elif notificationType == 'answerclarification':
         body = json.loads(event['body'])
         if 'username' not in body.keys():
             return {
@@ -23,8 +23,6 @@ def lambda_handler(event, context):
             'statusCode': 400,
             'body': 'Invalid Status Code!'
         }
-    
-    print(connectionIds)
     
     body = {'notificationType': notificationType}
     for connectionId in connectionIds:

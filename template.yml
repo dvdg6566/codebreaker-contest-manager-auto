@@ -52,7 +52,7 @@ Resources:
       Environment:
         Variables:
           WebSocketURI:
-            Fn::Sub: https://${WebSocket}.execute-api.${AWS::Region}.amazonaws.com/Production
+            Fn::Sub: https://${WebSocket}.execute-api.${AWS::Region}.amazonaws.com/production
   WebsocketConnectionsFunction:
     Type: AWS::Serverless::Function
     Properties:

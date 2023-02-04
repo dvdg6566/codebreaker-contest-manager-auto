@@ -1,5 +1,5 @@
 {
-	"Comment": "Codebreaker websocket to notify front-end",
+	"Comment": "Codebreaker websocket to notify front-end. Front-end packages connectionIds into groups of 100, and then step function will invoke lambda functions for each group to run concurrently.",
 	"StartAt": "Iterate",
 	"States":{
 		"Iterate": {

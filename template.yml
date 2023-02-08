@@ -623,11 +623,8 @@ Resources:
             source virtualenv/bin/activate
             pip3 install -r requirements.txt
 
-            touch password.py
-            echo 'FLASK_SECRET_KEY = "PLACEHOLDER"' >> password.py
-
             mkdir config
-            mkdir ~/.aws/
+            mkdir /home/ubuntu/.aws/
 
             {
               echo '[default]'
@@ -636,9 +633,21 @@ Resources:
             } >> config/awsconfig
             cp config/awsconfig ~/.aws/config
 
+            touch .env
+            {
+              echo 'JUDGE_NAME = codebreakercontest'
+              echo 'AWS_ACCOUNT_ID = 354145626860'
+              echo 'AWS_REGION = ap-southeast-1'
+
+              echo 'TIMEZONE_OFFSET = 8'
+              echo 'COGNITO_CLIENT_ID = 30ie37hitd97h3nge5uhf4kodp'
+              echo 'API_GATEWAY_LINK = wss://ty0j7jyjw1.execute-api.ap-southeast-1.amazonaws.com/production'
+              echo 'FLASK_SECRET_KEY = sometemporaryplaceholder'
+            } >> .env
+
             {
               echo '[Unit]'
-              echo 'Description=Gunicorn instance for a codebreaker'
+              echo 'Description=Gunicorn instance for Codebreaker'
               echo 'After=network.target'
               echo '[Service]'
               echo 'User=ubuntu'
@@ -685,6 +694,6 @@ Outputs:
         - ':'
         - - !GetAtt CompilerECRRepository.RepositoryUri
           - 'latest'
-  WebServerIP:
-    Description: Main web server IP address
-    Value: !Ref WebServerEIP
+  # WebServerIP:
+  #   Description: Main web server IP address
+  #   Value: !Ref WebServerEIP

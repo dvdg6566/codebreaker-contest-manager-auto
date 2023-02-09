@@ -376,10 +376,21 @@ Resources:
       AttributeDefinitions:
         - AttributeName: username
           AttributeType: S
+        - AttributeName: contestId
+          AttributeType: S
       KeySchema:
         - AttributeName: username
           KeyType: HASH
       BillingMode: PAY_PER_REQUEST
+      GlobalSecondaryIndexes:
+        - IndexName: contestIndex # To allow querying which users are registered in contest
+          KeySchema:
+            - AttributeName: contestId
+              KeyType: HASH
+            - AttributeName: username
+              KeyType: RANGE
+          Projection:
+            ProjectionType: KEYS_ONLY
   WebSocketTable:
     Type: AWS::DynamoDB::Table
     Properties:

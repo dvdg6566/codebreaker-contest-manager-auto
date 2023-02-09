@@ -540,6 +540,26 @@ Resources:
       Description: Production stage
       DeploymentId: !Ref WebSocketDeployment
       ApiId: !Ref WebSocket
+  UserPool:
+    Type: AWS::Cognito::UserPool
+    Properties: 
+      UserPoolName:
+        Fn::Sub:
+          ${JudgeName}-users
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+  UserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    DependsOn: UserPool
+    Properties:
+      ClientName:
+        Fn::Sub:
+          ${JudgeName}-userclient
+      UserPoolId: !Ref UserPool
+      ExplicitAuthFlows: # Grants permission for server to perform authentication against cognito
+        - ALLOW_REFRESH_TOKEN_AUTH
+        - ALLOW_USER_PASSWORD_AUTH
   WebServerIamRole:
     Type: AWS::IAM::Role
     Properties:
@@ -694,6 +714,10 @@ Outputs:
         - ':'
         - - !GetAtt CompilerECRRepository.RepositoryUri
           - 'latest'
-  # WebServerIP:
-  #   Description: Main web server IP address
-  #   Value: !Ref WebServerEIP
+  WebServerIP:
+    Description: Main web server IP address
+    Value: !Ref WebServerEIP
+  CognitoUserPoolId:
+    Value: !Ref UserPool
+  CognitoClientId:
+    Value: !Ref UserPoolClient

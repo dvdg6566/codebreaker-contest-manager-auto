@@ -44,7 +44,6 @@ Resources:
     Properties:
       FunctionName:
         Fn::Sub: ${JudgeName}-websocket-invoke
-      Timeout: 900 # Extra time to individually invoke each connection
       CodeUri: lambda-functions/websocket-invoke
       Policies:
         - AmazonAPIGatewayInvokeFullAccess
@@ -143,17 +142,23 @@ Resources:
         Type: GITHUB
         Location: 'https://github.com/singaporezoo/codebreaker-compiler'
         BuildSpec: buildspec.yml
-  # CompilerFunction:
-  #   Type: AWS::Lambda::Function
-  #   Properties:
-  #     FunctionName: 
-  #       Fn::Sub: ${JudgeName}-problem-verification
-  #     PackageType: Image
-  #     ImageUri: 
-  #       - 354145626860.dkr.ecr.ap-southeast-1.amazonaws.com/codebreakercontest-compiler-repository:latest
-  #     Policies:
-  #       - AmazonDynamoDBReadOnlyAccess
-  #       - AmazonS3FullAccess
+  CompilerFunctionIAMRole: # Declare role here, actual function only declared by bootstrap script as cloudformation cannot handle Lambda from ECR declared within same template
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName:
+        Fn::Sub: ${JudgeName}-compiler-role
+      AssumeRolePolicyDocument: # Specifies that role is for EC2 instances only
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonS3FullAccess
+        - arn:aws:iam::aws:policy/AmazonDynamoDBReadOnlyAccess
   GradingStateMachine:
     Type: AWS::Serverless::StateMachine
     Properties:
@@ -165,6 +170,7 @@ Resources:
         ProblemInitFunctionArn: !GetAtt GraderProblemInitFunction.Arn
         TestcaseGraderWrapperFunctionArn: !GetAtt TestcaseGraderWrapperFunction.Arn
         ProblemScorerFunctionArn: !GetAtt GraderProblemScorerFunction.Arn
+        JudgeName: !Ref JudgeName
       Type: EXPRESS
       Policies:
         - AWSLambdaRole
@@ -676,40 +682,13 @@ Resources:
               echo 'FLASK_SECRET_KEY = sometemporaryplaceholder'
             } >> .env
 
-            {
-              echo '[Unit]'
-              echo 'Description=Gunicorn instance for Codebreaker'
-              echo 'After=network.target'
-              echo '[Service]'
-              echo 'User=ubuntu'
-              echo 'Group=www-data'
-              echo 'WorkingDirectory=/home/ubuntu/codebreaker-contest-manager'
-              echo 'ExecStart=/home/ubuntu/codebreaker-contest-manager/virtualenv/bin/gunicorn -b localhost:8000 app:app'
-              echo 'Restart=always'
-              echo '[Install]'
-              echo 'WantedBy=multi-user.target'
-            } >> config/systemd
-            cp config/systemd /etc/systemd/system/codebreaker.service
+            cp init/systemd /etc/systemd/system/codebreaker.service
+            cp init/nginx /etc/nginx/sites-available/default
 
             systemctl start codebreaker
             systemctl enable codebreaker
             systemctl start nginx
             systemctl enable nginx
-
-            {
-              echo 'server {'
-              echo '    listen 80 default_server;'
-              echo '    listen [::]:80 default_server;'
-              echo '    server_name codebreaker;'
-              echo '    location / {'
-              echo '        proxy_pass http://127.0.0.1:8000;'
-              echo '        include proxy_params;'
-              echo '    }'
-              echo '}'
-            } >> config/nginx
-
-            cp config/nginx /etc/nginx/sites-available/default 
-            systemctl restart nginx
   WebServerEIP:
     Type: AWS::EC2::EIP
     DependsOn: WebServer

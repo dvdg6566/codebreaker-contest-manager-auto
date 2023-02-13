@@ -43,7 +43,7 @@
               "OutputPath": "$.Payload",
               "Parameters": {
                 "Payload.$": "$",
-                "FunctionName": "arn:aws:lambda:ap-southeast-1:354145626860:function:codebreakercontest-compilation"
+                "FunctionName": "arn:aws:lambda:ap-southeast-1:354145626860:function:${JudgeName}-compiler"
               },
               "Retry": [
                 {

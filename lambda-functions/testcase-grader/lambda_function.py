@@ -54,8 +54,9 @@ def lambda_handler(event, context):
 		cmd = cmd,
 		outputFile = 'comparison_file',
 		timeLimit = timeLimit,
-		memoryLimit = memoryLimit
-	)
+		memoryLimit = memoryLimit,
+		checker=0
+	) # File limit is input and output files
 	
 	# TLE, RTE, MLE
 	if result['verdict'] != 'AC':
@@ -77,26 +78,29 @@ def lambda_handler(event, context):
 			cmd = checkerCmd,
 			outputFile = 'checker_out',
 			timeLimit = 20,
-			memoryLimit = 1024
+			memoryLimit = 1024,
+			checker=1
 		)
-		
-		with open("checker_out", "r") as f:
-			checkerOutput = f.read()
 		
 		# Interpreting checker output
 		if checkerResult['verdict'] != 'AC': # Checker RTE
-			result['verdict'] = 'CHECKER FAULT'
+			print("RTE")
+			result['verdict'] = 'CHECKER RTE'
 			result['score'] = 0
 			return result
 
 		try:
+			with open("checker_out", "r") as f:
+				print(f)
+				checkerOutput = f.read()
 			score = Decimal(checkerOutput) * 100
 			if score < 0 or score > 100: # Invalid Score
 				result['verdict'] = 'CHECKER FAULT'
 				result['score'] = 0
 				return result
 			result['score'] = round(score, 2)
-		except InvalidOperation: # Invalid Output Format
+		except Exception as e: # Invalid Output Format
+			print(e)
 			result['verdict'] = 'CHECKER FAULT'
 			result['score'] = 0
 			return result

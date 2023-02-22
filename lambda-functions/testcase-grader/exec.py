@@ -52,9 +52,18 @@ def execute(cmd, outputFile, timeLimit, memoryLimit, checker=0):
 			# Gets time and memory of certain PID
 			# p is the sh process (that's running ./code)
 			# child is the code process (the actual code invocation)
-
-			if (len(p.children()) != 0): 
-				child = p.children()[0]
+	
+			children = p.children(recursive=True)
+			
+			# Many children: Fork Bomb
+			if len(children) > 1:
+				process.terminate()
+				for child in children:
+					child.terminate()
+				break
+				
+			if len(children) == 1: 
+				child = children[0]
 
 				wall_time = monotonic() - initial_wall_time
 
@@ -74,7 +83,6 @@ def execute(cmd, outputFile, timeLimit, memoryLimit, checker=0):
 				break
 
 		except Exception as e:
-			print(e)
 			break
 		# sleep(0.01)
 	

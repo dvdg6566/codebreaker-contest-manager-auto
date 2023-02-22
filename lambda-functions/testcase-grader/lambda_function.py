@@ -2,7 +2,6 @@ import os
 import boto3
 import subprocess
 from decimal import Decimal, InvalidOperation
-from uuid import uuid4
 from cmscmp import white_diff_step
 from exec import execute
 
@@ -21,7 +20,6 @@ def deleteFiles():
 def lambda_handler(event, context):
 	problemName = event["problemName"]
 	subId = event["submissionId"]
-	subHash = '919b9280-4d24-4c87-94a1-8188fee62fb1'
 	testcaseNumber = event["testcaseNumber"]
 	language = event["language"]
 	customChecker = event["customChecker"]

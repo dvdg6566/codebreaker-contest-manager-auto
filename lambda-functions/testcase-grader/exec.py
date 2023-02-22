@@ -15,27 +15,7 @@ import subprocess
 from math import ceil
 from time import sleep, monotonic
 
-# Gets time and memory of certain PID
-# p is the sh process (that's running ./code)
-# child is the code process (the actual code invocation)
-def getMemory(p):
-	if (len(p.children()) == 0): return 0
-	child = p.children()[0]
-	
-	memory_info = child.memory_info()
-	# TODO: Determine if RMS or VMS is more suitable indicator
-	return memory_info.vms
-
-def getTotalTime(p):
-	if (len(p.children()) == 0): return 0
-	child = p.children()[0]
-	
-	time_info = child.cpu_times()
-	return time_info.user
-	# return monotonic()
-
-def execute(cmd, outputFile, timeLimit, memoryLimit):
-
+def execute(cmd, outputFile, timeLimit, memoryLimit, openFileLimit=100):
 	for proc in psutil.process_iter():
 		if proc.name() == 'code':
 			pid = proc.pid
@@ -46,12 +26,9 @@ def execute(cmd, outputFile, timeLimit, memoryLimit):
 	allocatedMemory = (memoryLimit+128) * 1024 * 1024
 	numConnections = len(psutil.net_connections())
 
-	if outputFile != None:
-		with open(outputFile,"wb") as out:
-			process = subprocess.Popen(cmd, shell=True, stdout=out, stderr = subprocess.PIPE)
-	else:
-		process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr = subprocess.PIPE)
-
+	with open(outputFile,"wb") as out:
+		process = subprocess.Popen(cmd, shell=True, stdout=out, stderr = subprocess.PIPE)
+	
 	pid = process.pid
 	p = psutil.Process(pid)
 	# p.rlimit(psutil.RLIMIT_FSIZE, (0,0))
@@ -60,37 +37,50 @@ def execute(cmd, outputFile, timeLimit, memoryLimit):
 
 	memory = 0
 	time = 0
-
-	initTime = getTotalTime(p)
+	securityViolation = 0
+	initial_wall_time = monotonic()
 
 	while True:
 		if process.poll() is not None:
 			# Check if the process has finished
 			break
 		try:
-			current_memory = getMemory(p)
-			current_time = getTotalTime(p)
-
-			memory = max(current_memory, memory)
-			time = max(current_time, time) - initTime
-
-			if time > allocatedTime:
+			if len(psutil.net_connections()) > numConnections:
+				securityViolation = True
 				process.terminate()
-				process.wait()
+				break
+
+			# Gets time and memory of certain PID
+			# p is the sh process (that's running ./code)
+			# child is the code process (the actual code invocation)
+
+			if (len(p.children()) != 0): 
+				child = p.children()[0]
+				if len(child.open_files()) > openFileLimit:
+					securityViolation = True
+					process.terminate()
+					break
+
+				wall_time = monotonic() - initial_wall_time
+
+				memory = max(child.memory_info().vms, memory)
+				time = max(child.cpu_times().user, time)
+
+			if time > allocatedTime or wall_time > 20:
+				process.terminate()
 				break
 
 			if memory > allocatedMemory:
 				process.terminate()
-				process.wait()
 				break
 
 		except Exception as e:
 			print(e)
 			break
-		sleep(0.01)
+		# sleep(0.01)
 	
-	# HTTP request was made
-	if len(psutil.net_connections()) > numConnections:
+	# HTTP request was made or extra file was written to
+	if securityViolation:
 		return {
 			"verdict": "Security Violation",
 			"score": 0,

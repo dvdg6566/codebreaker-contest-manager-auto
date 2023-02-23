@@ -352,9 +352,7 @@ Resources:
               - submissionTime
               - maxTime
               - maxMemory
-              - score
               - username
-              - subtaskScores
               - totalScore
               - language
               - compileErrorMessage
@@ -374,6 +372,8 @@ Resources:
               - totalScore
               - language
               - compileErrorMessage
+              - score
+              - subtaskScores
   UsersTable:
     Type: AWS::DynamoDB::Table
     Properties:

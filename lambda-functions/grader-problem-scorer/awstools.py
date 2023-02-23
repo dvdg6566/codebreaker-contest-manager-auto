@@ -49,13 +49,13 @@ def updateCE(subId, compileErrorMessage):
         ExpressionAttributeValues={':compileErrorMessage':compileErrorMessage}
     )
 
-def getStitchSubmissions(problemName, username):
+def getStitchSubmissions(username, problemName):
     # Gets list of all submissions made by user to problem
     submissions = submissions_table.query(
-        IndexName = 'problemIndex',
-        KeyConditionExpression = Key('problemName').eq(problemName),
-        ProjectionExpression = 'subtaskScores',
-        FilterExpression = Attr('username').eq(username),
+        IndexName = 'usernameIndex',
+        KeyConditionExpression = Key('username').eq(username),
+        ProjectionExpression = 'subtaskScores, score',
+        FilterExpression = Attr('problemName').eq(problemName),
         ScanIndexForward = False
     )['Items']
 
@@ -65,6 +65,6 @@ def updateUserScore(username, problemName, stitchedScore):
     users_table.update_item(
         Key = {'username' : username},
         UpdateExpression = f'set problemScores. #a =:s',
-        ExpressionAttributeValues={':s' : maxScore},
+        ExpressionAttributeValues={':s' : stitchedScore},
         ExpressionAttributeNames={'#a':problemName}
     )

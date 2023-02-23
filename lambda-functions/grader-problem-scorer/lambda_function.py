@@ -4,6 +4,7 @@ import datetime
 import awstools
 from time import sleep
 from math import ceil
+from decimal import Decimal
 from boto3.dynamodb.conditions import Key, Attr
 import time
 
@@ -24,12 +25,12 @@ def lambda_handler(event, context):
 	problemInfo = awstools.getProblemInfo(problemName)        
 
 	subtaskDependency = problemInfo['subtaskDependency']
-	subtaskMaxScores = problemInfo['subtaskScores']
+	subtaskTotalScores = problemInfo['subtaskScores']
 	testcaseCount = int(problemInfo['testcaseCount'])
 	subtaskCount = len(subtaskDependency)
 	subtaskScores = [0 for i in range(subtaskCount)]
 
-	submissionInfo = awstools.getSubmission(subId)
+	submissionInfo = awstools.getSubmission(subId=subId)
 	scores = submissionInfo['score'] # List of scores for each testcase
 
 	maxTime = max(submissionInfo['times']) # Maximum runtime across testcases
@@ -53,40 +54,59 @@ def lambda_handler(event, context):
 						subtaskScores[i] = min(subtaskScores[i], scores[j])
 		return subtaskScores
 	
+	# Subtask Scores is the score for the latest submission
 	subtaskScores = calculateSubtaskScores(subtaskDependency, scores)
 	 
 	totalScore = 0
 	for i in range(subtaskCount):
-		totalScore += subtaskScores[i] * subtaskMaxScores[i]
+		totalScore += subtaskScores[i] * subtaskTotalScores[i]
 
-	totalScore /= 100
-	totalScore = round(totalScore, 2)
+	totalScore = Decimal(round(totalScore/100, 2))
 
-	awstools.updateSubmission(subId, maxTime, maxMemory, subtaskScores, totalScore)
-
+	awstools.updateSubmission(
+		subId = subId, 
+		maxTime = maxTime, 
+		maxMemory = maxMemory, 
+		subtaskScores = subtaskScores,
+		totalScore = totalScore
+	)
 	''' END: EVALUATE CURRENT SUBMISSION ''' 
-	submissions = awstools.getStitchSubmissions(username, problemName)
+
+	''' BEGIN: STITCHING FOR USER'S MAXIMUM SCORE '''
+	submissions = awstools.getStitchSubmissions(
+		username=username, problemName=problemName
+	)
 	
+	# Subtask Max Scores is the maximum score across all old submissions
 	subtaskMaxScores = [0] * subtaskCount
 	
+	# Iterate through all old submissions and find maximum score for each subtask	
 	for oldSub in submissions:
-		if len(oldSub.scores) != testcaseCount: continue # Invalid submission
-		oldSubScores = calculateSubtaskScores(subtaskDependency, oldSub['scores'])
+		# Invalid submission (different number of TC)
+		# -1 because scores is 1-indexed
+		if len(oldSub['score']) - 1 != testcaseCount: continue 
 		for subtask in range(subtaskCount):
-			subtaskMaxScores[subtask] = max(subtaskMaxScores[subtask], oldSubScores)
+			subtaskMaxScores[subtask] = max(subtaskMaxScores[subtask], oldSub['subtaskScores'][subtask])
 
+	# Calculate score based on old submissions score 
 	stitchedScore = 0
 	for i in range(subtaskCount):
-		stitchedScore += subtaskScores[i] * subtaskMaxScores[i]
+		stitchedScore += max(subtaskScores[i], subtaskMaxScores[i]) * subtaskTotalScores[i]
+	stitchedScore = Decimal(round(stitchedScore/100, 2))
 
+	# Update user table if score is updated
 	userInfo = awstools.getProblemScores(username)
 	problemScore = 0
 	if problemName in userInfo['problemScores']:
 		problemScore = userInfo['problemScores'][problemName]
 
-	if stitchedScore > problemScore:
-		awstools.updateUserScore(username, problemName, stitchedScore)
+	awstools.updateUserScore(
+		username = username, 
+		problemName = problemName, 
+		stitchedScore = stitchedScore
+	)
 	
+	''' END: STITCHING FOR USER'S MAXIMUM SCORE  '''
 	return {
 		"statusCode":200
 	}

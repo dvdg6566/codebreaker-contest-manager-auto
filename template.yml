@@ -355,7 +355,7 @@ Resources:
               - score
               - username
               - subtaskScores
-              - totalScores
+              - totalScore
               - language
               - compileErrorMessage
         - IndexName: usernameIndex

@@ -5,12 +5,11 @@ from decimal import Decimal, InvalidOperation
 from cmscmp import white_diff_step
 from exec import execute
 
-# judgeName = os.environ['judgeName']
-judgeName = 'codebreaker'
+judgeName = os.environ['judgeName']
 s3 = boto3.resource('s3')
-submissions_bucket = s3.Bucket("codebreaker-submissions")
-testdata_bucket = s3.Bucket("codebreaker-testdata")
-checkers_bucket = s3.Bucket("codebreaker-checkers")
+submissions_bucket = s3.Bucket(f"{judgeName}-submissions")
+testdata_bucket = s3.Bucket(f"{judgeName}-testdata")
+checkers_bucket = s3.Bucket(f"{judgeName}-checkers")
 
 # Deletes all tmp files (from previous invocations) at the start of an invocation
 def deleteFiles():

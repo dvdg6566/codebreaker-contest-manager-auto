@@ -28,7 +28,7 @@ def execute(cmd, outputFile, timeLimit, memoryLimit, checker=0):
 
 	def setLimits():
 		resource.setrlimit(resource.RLIMIT_NOFILE, (4,4))
-		max_file_size = 128 * 1024 * 1024
+		max_file_size = 128 * 1024 * 1024 # Maximum subprocess file size 128MB
 		resource.setrlimit(resource.RLIMIT_FSIZE, (max_file_size, max_file_size))
 		
 	with open(outputFile,"wb") as out:
@@ -85,7 +85,6 @@ def execute(cmd, outputFile, timeLimit, memoryLimit, checker=0):
 
 		except Exception as e:
 			break
-		# sleep(0.01)
 	
 	process.wait()
 	returncode = abs(process.returncode)
@@ -94,12 +93,6 @@ def execute(cmd, outputFile, timeLimit, memoryLimit, checker=0):
 		verdict = 'TLE'
 	elif memory > memoryLimit * 1024 * 1024:
 		verdict = 'MLE'
-	elif verdict == 'SV':
-		# Clear all forkbomb processes
-		for proc in psutil.process_iter():
-			if proc.pid != 1 and proc.pid != 8:
-				pid = proc.pid
-				os.kill(pid, signal.SIGTERM)
 	elif returncode != 0:
 		verdict = "RTE"
 

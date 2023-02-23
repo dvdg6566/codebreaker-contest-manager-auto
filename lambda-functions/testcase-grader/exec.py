@@ -27,8 +27,9 @@ def execute(cmd, outputFile, timeLimit, memoryLimit, checker=0):
 	numConnections = len(psutil.net_connections())
 
 	def setLimits():
-		if not checker:
-			resource.setrlimit(resource.RLIMIT_NOFILE, (4,4))
+		resource.setrlimit(resource.RLIMIT_NOFILE, (4,4))
+		max_file_size = 128 * 1024 * 1024
+		resource.setrlimit(resource.RLIMIT_FSIZE, (max_file_size, max_file_size))
 		
 	with open(outputFile,"wb") as out:
 		if not checker: 
@@ -93,6 +94,12 @@ def execute(cmd, outputFile, timeLimit, memoryLimit, checker=0):
 		verdict = 'TLE'
 	elif memory > memoryLimit * 1024 * 1024:
 		verdict = 'MLE'
+	elif verdict == 'SV':
+		# Clear all forkbomb processes
+		for proc in psutil.process_iter():
+			if proc.pid != 1 and proc.pid != 8:
+				pid = proc.pid
+				os.kill(pid, signal.SIGTERM)
 	elif returncode != 0:
 		verdict = "RTE"
 

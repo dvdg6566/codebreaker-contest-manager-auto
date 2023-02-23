@@ -2,11 +2,8 @@ import json
 import boto3
 import datetime
 import awstools
-from time import sleep
-from math import ceil
-from concurrent.futures.thread import ThreadPoolExecutor
 from boto3.dynamodb.conditions import Key, Attr
-import time
+
 dynamodb = boto3.resource('dynamodb')
 problems_table = dynamodb.Table('codebreaker-problems')
 submissions_table = dynamodb.Table('codebreaker-submissions')
@@ -51,38 +48,28 @@ def lambda_handler(event, context):
     status = [1 for i in range(testcaseNumber+1)]
     
     submission_upload = {
-         "subId": submissionId,
-         "submissionTime": subTime,
-         "gradingTime": (datetime.datetime.utcnow()+datetime.timedelta(hours=8)).strftime("%Y-%m-%d %X"),
-         "username": username,
-         "maxMemory":0,
-         "maxTime":0,
-         "problemName":problemName,
-         "score":scores,
-         "verdicts":verdicts,
-         "times":times,
-         "memories":memories,
-         "returnCodes":returnCodes,
-         "subtaskScores":subtaskScores,
-         "status":status,
-         'totalScore':0,
-         'language': language
+        "subId": submissionId,
+        "submissionTime": subTime,
+        "gradingTime": (datetime.datetime.utcnow()).strftime("%Y-%m-%d %X"),
+        "gradingCompleteTime": '',
+        "username": username,
+        "maxMemory":0,
+        "maxTime":0,
+        "problemName":problemName,
+        "score":scores,
+        "verdicts":verdicts,
+        "times":times,
+        "memories":memories,
+        "returnCodes":returnCodes,
+        "subtaskScores":subtaskScores,
+        "status":status,
+        "totalScore":0,
+        "language": language
     }
     
     awstools.uploadSubmission(submission_upload)
     
-    lambda_input = {
-        "problemName": problemName,
-        "submissionId": submissionId,
-        "start": 1,
-        "end": testcaseNumber,
-        "memoryLimit": float(memoryLimit),
-        "timeLimit": float(timeLimit),
-        "customChecker": int(customChecker),
-        "language": language
-    }
-    
-    # GENERATES LAMBDA INPUT TO SEND TO STEP FUNCTION
+    # GENERATES LAMBDA INPUT TO SEND TO STATE MACHINE
 
     output = {
         'status': 200,

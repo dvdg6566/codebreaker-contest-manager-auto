@@ -35,18 +35,18 @@ def getSubmission(subId):
     if len(response['Items']) != 1: return None
     return response['Items'][0]
 
-def updateSubmission(subId, maxTime, maxMemory, subtaskScores, totalScore):
+def updateSubmission(subId, maxTime, maxMemory, subtaskScores, totalScore, gradingCompleteTime):
     submissions_table.update_item(
         Key={'subId':subId},
-        UpdateExpression = f'set maxTime = :maxTime, maxMemory=:maxMemory,subtaskScores=:subtaskScores,totalScore=:totalScore',
-        ExpressionAttributeValues={':maxTime':maxTime,':maxMemory':maxMemory,':subtaskScores':subtaskScores,':totalScore':totalScore}
+        UpdateExpression = f'set maxTime = :a, maxMemory=:b,subtaskScores=:c,totalScore=:d,gradingCompleteTime=:e',
+        ExpressionAttributeValues={':a':maxTime,':b':maxMemory,':c':subtaskScores,':d':totalScore,':e':gradingCompleteTime}
     )
 
-def updateCE(subId, compileErrorMessage):
+def updateCE(subId, compileErrorMessage, gradingCompleteTime):
     submissions_table.update_item(
         Key={'subId':subId},
-        UpdateExpression = f'set compileErrorMessage = :compileErrorMessage',
-        ExpressionAttributeValues={':compileErrorMessage':compileErrorMessage}
+        UpdateExpression = f'set compileErrorMessage = :a, gradingCompleteTime= :b',
+        ExpressionAttributeValues={':a':compileErrorMessage, ':b': gradingCompleteTime}
     )
 
 def getStitchSubmissions(username, problemName):

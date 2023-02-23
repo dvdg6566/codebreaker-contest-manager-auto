@@ -1,11 +1,10 @@
 import json
 import boto3
-import datetime
 import awstools
 from time import sleep
 from math import ceil
 from decimal import Decimal
-from boto3.dynamodb.conditions import Key, Attr
+from datetime import 
 import time
 
 def lambda_handler(event, context):
@@ -19,7 +18,11 @@ def lambda_handler(event, context):
 	# Just update the compile error message in Dynamo
 
 	if compileError:
-		awstools.updateCE(subId=subId, compileErrorMessage=compileErrorMessage)
+		awstools.updateCE(
+			subId=subId, 
+			compileErrorMessage=compileErrorMessage, 
+			gradingCompleteTime=gradingCompleteTime
+		)
 		return {'status':200}
 
 	problemInfo = awstools.getProblemInfo(problemName)        
@@ -68,7 +71,8 @@ def lambda_handler(event, context):
 		maxTime = maxTime, 
 		maxMemory = maxMemory, 
 		subtaskScores = subtaskScores,
-		totalScore = totalScore
+		totalScore = totalScore,
+		gradingCompleteTime = gradingCompleteTime
 	)
 	''' END: EVALUATE CURRENT SUBMISSION ''' 
 

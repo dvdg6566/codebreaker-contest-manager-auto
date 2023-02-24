@@ -68,7 +68,7 @@ def execute(cmd, outputFile, timeLimit, memoryLimit, checker=0):
 
 				wall_time = monotonic() - initial_wall_time
 
-				memory = max(child.memory_info().vms, memory)
+				memory = max(child.memory_info().rss, memory)
 				time = max(child.cpu_times().user, time)
 				
 				if wall_time > 20: 
@@ -87,7 +87,7 @@ def execute(cmd, outputFile, timeLimit, memoryLimit, checker=0):
 			break
 	
 	process.wait()
-	returncode = abs(process.returncode)
+	returncode = abs(process.returncode) % 128
 
 	if time > timeLimit:
 		verdict = 'TLE'

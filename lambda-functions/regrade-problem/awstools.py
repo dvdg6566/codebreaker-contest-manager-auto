@@ -69,7 +69,6 @@ def gradeSubmission(problemName,submissionId,username,submissionTime=None,regrad
         "problemType": problemType
     }
     
-    time.sleep(3)
     stepFunctionARN = f"arn:aws:states:{region}:{accountId}:stateMachine:{judgeName}-grading"
     res = SFclient.start_execution(stateMachineArn = stepFunctionARN, input=json.dumps(SF_input))
     

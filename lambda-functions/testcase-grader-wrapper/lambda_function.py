@@ -1,7 +1,6 @@
 import os
 import json
 import boto3
-import uuid
 from decimal import *
 
 judgeName = os.environ['judgeName']

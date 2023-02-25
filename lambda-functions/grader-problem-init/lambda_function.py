@@ -1,13 +1,5 @@
-import json
-import boto3
-import datetime
 import awstools
-from boto3.dynamodb.conditions import Key, Attr
-
-dynamodb = boto3.resource('dynamodb')
-problems_table = dynamodb.Table('codebreaker-problems')
-submissions_table = dynamodb.Table('codebreaker-submissions')
-users_table = dynamodb.Table('codebreaker-users')
+from datetime import datetime
 
 def lambda_handler(event, context):
     
@@ -17,27 +9,17 @@ def lambda_handler(event, context):
     subTime = event['submissionTime']
     language = event['language'] # Language should be from "py" or "cpp"
     
-    response= problems_table.query(
-        KeyConditionExpression = Key('problemName').eq(problemName)
-    )
-    
-    problem_info=response['Items']
-    if (len(problem_info) != 1):
-        return {
-            "statusCode": "300",
-            "errorMessage": "No problem found"
-        }
+    problemInfo = awstools.getProblemInfo(problemName)
 
-    problem_info = problem_info[0]
-    timeLimit = problem_info['timeLimit']
-    memoryLimit = problem_info['memoryLimit']
-    if memoryLimit=="":memoryLimit="1024"
-    if timeLimit=="":timeLimit="1"
-    subtaskDependency = problem_info['subtaskDependency']
-    subtaskMaxScores = problem_info['subtaskScores']
+    timeLimit = problemInfo['timeLimit']
+    memoryLimit = problemInfo['memoryLimit']
+    if memoryLimit=="":memoryLimit=1024
+    if timeLimit=="":timeLimit=1
+    subtaskDependency = problemInfo['subtaskDependency']
+    subtaskMaxScores = problemInfo['subtaskScores']
     subtaskNumber = len(subtaskDependency)
-    testcaseNumber = int(problem_info['testcaseCount'])
-    customChecker = problem_info['customChecker']
+    testcaseNumber = int(problemInfo['testcaseCount'])
+    customChecker = problemInfo['customChecker']
     
     times = [0 for i in range(testcaseNumber+1)]
     memories = [0 for i in range(testcaseNumber+1)]
@@ -50,7 +32,7 @@ def lambda_handler(event, context):
     submission_upload = {
         "subId": submissionId,
         "submissionTime": subTime,
-        "gradingTime": (datetime.datetime.utcnow()).strftime("%Y-%m-%d %X"),
+        "gradingTime": (datetime.utcnow()).strftime("%Y-%m-%d %X"),
         "gradingCompleteTime": '',
         "username": username,
         "maxMemory":0,

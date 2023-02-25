@@ -1,6 +1,5 @@
-import time
-import json
 import awstools
+from time import sleep
 
 def regradeProblem(problemName, regradeType = 'NORMAL',stitch=False):
     # Regrade type can be NORMAL, AC, NONZERO
@@ -26,7 +25,8 @@ def regradeProblem(problemName, regradeType = 'NORMAL',stitch=False):
             problemType=problemInfo['problem_type'],
             stitch=stitch
         )
-        
+
+        time.sleep(3)
     
 def lambda_handler(event, context):
     problemName = event['problemName']
@@ -36,7 +36,6 @@ def lambda_handler(event, context):
     regradeProblem(problemName=problemName,regradeType=regradeType,stitch=stitch)
     # GIVE TIME FOR ALL PROBLEMS TO GRADE
     time.sleep(30)
-    
     
     if stitch:
         awstools.updateAllStitchedScores(problemName)

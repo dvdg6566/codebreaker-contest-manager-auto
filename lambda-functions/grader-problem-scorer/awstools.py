@@ -1,8 +1,7 @@
 import os
 import boto3
 import json
-from botocore.exceptions import ClientError
-from botocore.client import Config
+from datetime import datetime
 from boto3.dynamodb.conditions import Key, Attr
 
 judgeName = os.environ['judgeName']
@@ -35,7 +34,8 @@ def getSubmission(subId):
     if len(response['Items']) != 1: return None
     return response['Items'][0]
 
-def updateSubmission(subId, maxTime, maxMemory, subtaskScores, totalScore, gradingCompleteTime):
+def updateSubmission(subId, maxTime, maxMemory, subtaskScores, totalScore):
+    gradingCompleteTime = datetime.utcnow().strftime("%Y-%m-%d %X")
     submissions_table.update_item(
         Key={'subId':subId},
         UpdateExpression = f'set maxTime = :a, maxMemory=:b,subtaskScores=:c,totalScore=:d,gradingCompleteTime=:e',
@@ -43,6 +43,7 @@ def updateSubmission(subId, maxTime, maxMemory, subtaskScores, totalScore, gradi
     )
 
 def updateCE(subId, compileErrorMessage, gradingCompleteTime):
+    gradingCompleteTime = datetime.utcnow().strftime("%Y-%m-%d %X")
     submissions_table.update_item(
         Key={'subId':subId},
         UpdateExpression = f'set compileErrorMessage = :a, gradingCompleteTime= :b',
@@ -61,10 +62,10 @@ def getStitchSubmissions(username, problemName):
 
     return submissions
 
-def updateUserScore(username, problemName, stitchedScore):
+def updateUserScore(username, problemName, stitchedScore, lastScoreChange):
     users_table.update_item(
         Key = {'username' : username},
-        UpdateExpression = f'set problemScores. #a =:s',
+        UpdateExpression = f'set problemScores. #a =:s, lastScoreChange=:b',
         ExpressionAttributeValues={':s' : stitchedScore},
-        ExpressionAttributeNames={'#a':problemName}
+        ExpressionAttributeNames={'#a':problemName, ':b':lastScoreChange}
     )

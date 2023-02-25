@@ -1,11 +1,5 @@
-import json
-import boto3
 import awstools
-from time import sleep
-from math import ceil
 from decimal import Decimal
-from datetime import 
-import time
 
 def lambda_handler(event, context):
 	problemName = event['problemName']
@@ -20,8 +14,7 @@ def lambda_handler(event, context):
 	if compileError:
 		awstools.updateCE(
 			subId=subId, 
-			compileErrorMessage=compileErrorMessage, 
-			gradingCompleteTime=gradingCompleteTime
+			compileErrorMessage=compileErrorMessage
 		)
 		return {'status':200}
 
@@ -35,6 +28,7 @@ def lambda_handler(event, context):
 
 	submissionInfo = awstools.getSubmission(subId=subId)
 	scores = submissionInfo['score'] # List of scores for each testcase
+	submissionTime = submissionInfo['submissionTime']
 
 	maxTime = max(submissionInfo['times']) # Maximum runtime across testcases
 	maxMemory = max(submissionInfo['memories']) # Maximum memory across testcases
@@ -71,8 +65,7 @@ def lambda_handler(event, context):
 		maxTime = maxTime, 
 		maxMemory = maxMemory, 
 		subtaskScores = subtaskScores,
-		totalScore = totalScore,
-		gradingCompleteTime = gradingCompleteTime
+		totalScore = totalScore
 	)
 	''' END: EVALUATE CURRENT SUBMISSION ''' 
 
@@ -104,11 +97,14 @@ def lambda_handler(event, context):
 	if problemName in userInfo['problemScores']:
 		problemScore = userInfo['problemScores'][problemName]
 
-	awstools.updateUserScore(
-		username = username, 
-		problemName = problemName, 
-		stitchedScore = stitchedScore
-	)
+	if stitchedScore > problemScore:
+		# Update latest score change
+		awstools.updateUserScore(
+			username = username, 
+			problemName = problemName, 
+			stitchedScore = stitchedScore,
+			lastScoreChange = submissionTime
+		)
 	
 	''' END: STITCHING FOR USER'S MAXIMUM SCORE  '''
 	return {

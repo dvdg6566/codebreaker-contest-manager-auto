@@ -42,7 +42,7 @@ def updateSubmission(subId, maxTime, maxMemory, subtaskScores, totalScore):
         ExpressionAttributeValues={':a':maxTime,':b':maxMemory,':c':subtaskScores,':d':totalScore,':e':gradingCompleteTime}
     )
 
-def updateCE(subId, compileErrorMessage, gradingCompleteTime):
+def updateCE(subId, compileErrorMessage):
     gradingCompleteTime = datetime.utcnow().strftime("%Y-%m-%d %X")
     submissions_table.update_item(
         Key={'subId':subId},
@@ -62,10 +62,10 @@ def getStitchSubmissions(username, problemName):
 
     return submissions
 
-def updateUserScore(username, problemName, stitchedScore, lastScoreChange):
+def updateUserScore(username, problemName, stitchedScore, latestScoreChange):
     users_table.update_item(
         Key = {'username' : username},
-        UpdateExpression = f'set problemScores. #a =:s, lastScoreChange=:b',
+        UpdateExpression = f'set problemScores. #a =:s, latestScoreChange=:b',
         ExpressionAttributeValues={':s' : stitchedScore},
-        ExpressionAttributeNames={'#a':problemName, ':b':lastScoreChange}
+        ExpressionAttributeNames={'#a':problemName, ':b':latestScoreChange}
     )

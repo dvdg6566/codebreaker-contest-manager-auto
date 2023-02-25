@@ -103,7 +103,7 @@ def lambda_handler(event, context):
 			username = username, 
 			problemName = problemName, 
 			stitchedScore = stitchedScore,
-			lastScoreChange = submissionTime
+			latestScoreChange = submissionTime
 		)
 	
 	''' END: STITCHING FOR USER'S MAXIMUM SCORE  '''

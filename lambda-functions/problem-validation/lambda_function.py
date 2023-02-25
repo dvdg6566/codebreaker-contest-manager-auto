@@ -1,3 +1,4 @@
+import re
 import os
 import json
 import awstools
@@ -122,6 +123,11 @@ def lambda_handler(event, context):
 
 	for obj in testcaseFiles:
 		filename = obj.key
+
+		# Invalid file name
+		validFileName = re.match('[a-zA-Z0-9]+/[\d]+\.(in|out)', filename)
+		if validFileName == None: continue
+
 		# Split by / to remove the folder name, split '.' to separate in and out
 		x = filename.split('/')[1].split('.')
 		if x[0] == '':

@@ -15,11 +15,14 @@ import subprocess
 from math import ceil
 from time import sleep, monotonic
 
-def execute(cmd, outputFile, timeLimit, memoryLimit, checker=0):
+def cleanProc():
 	for proc in psutil.process_iter():
 		if proc.name() == 'code':
 			pid = proc.pid
 			os.kill(pid, signal.SIGTERM)
+
+def execute(cmd, outputFile, timeLimit, memoryLimit, checker=0):
+	cleanProc()
 
 	# Hard limits for execution
 	allocatedTime = ceil(timeLimit+0.5)

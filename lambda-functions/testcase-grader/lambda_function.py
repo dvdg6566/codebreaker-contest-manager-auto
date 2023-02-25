@@ -1,9 +1,10 @@
 import os
+import re
 import boto3
 import subprocess
 from decimal import Decimal, InvalidOperation
 from cmscmp import white_diff_step
-from exec import execute
+from exec import execute, cleanProc
 
 judgeName = os.environ['judgeName']
 s3 = boto3.resource('s3')
@@ -27,6 +28,7 @@ def lambda_handler(event, context):
 
 	os.chdir('/tmp')
 	deleteFiles()
+	cleanProc()
 	
 	INPUT_FILE = "input_file"
 	OUTPUT_FILE = "output_file"
@@ -88,14 +90,23 @@ def lambda_handler(event, context):
 
 		try:
 			with open("checker_out", "r") as f:
-				print(f)
 				checkerOutput = f.read()
-			score = Decimal(checkerOutput) * 100
+			
+			match = re.search(r'^\S+', checkerOutput)
+			if match:
+				scoreString = match.group(0)
+			else:
+				# If no space or newline, then Decimal entire score
+				scoreString = checkerOutput
+				
+			score = Decimal(scoreString) * 100
+			
 			if score < 0 or score > 100: # Invalid Score
 				result['verdict'] = 'CHECKER FAULT'
 				result['score'] = 0
 				return result
 			result['score'] = round(score, 2)
+		
 		except Exception as e: # Invalid Output Format
 			print(e)
 			result['verdict'] = 'CHECKER FAULT'

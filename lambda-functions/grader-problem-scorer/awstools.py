@@ -65,7 +65,7 @@ def getStitchSubmissions(username, problemName):
 def updateUserScore(username, problemName, stitchedScore, latestScoreChange):
     users_table.update_item(
         Key = {'username' : username},
-        UpdateExpression = f'set problemScores. #a =:s, latestScoreChange=:b',
-        ExpressionAttributeValues={':s' : stitchedScore},
-        ExpressionAttributeNames={'#a':problemName, ':b':latestScoreChange}
+        UpdateExpression = f'set problemScores. #a =:a, latestScoreChange=:b',
+        ExpressionAttributeValues={':a': stitchedScore, ':b':latestScoreChange},
+        ExpressionAttributeNames={'#a':problemName}
     )

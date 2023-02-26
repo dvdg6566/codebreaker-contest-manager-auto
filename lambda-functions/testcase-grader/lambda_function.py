@@ -82,12 +82,6 @@ def lambda_handler(event, context):
 		)
 		
 		# Interpreting checker output
-		if checkerResult['verdict'] != 'AC': # Checker RTE
-			print("RTE")
-			result['verdict'] = 'CHECKER RTE'
-			result['score'] = 0
-			return result
-
 		try:
 			with open("checker_out", "r") as f:
 				checkerOutput = f.read()

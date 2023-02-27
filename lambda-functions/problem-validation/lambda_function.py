@@ -15,12 +15,13 @@ def verifyDependency(dependency,memo):
 		nums = i.split('-')
 		if len(nums) > 1:
 			x, y = int(nums[0]), int(nums[1])
-			for i in range(x,y+1):memo[i]=1
+			for i in range(x,y+1):
+				if i < len(memo): memo[i]=1
 			ans=max(ans,y)
 		else:
 			x = int(nums[0])
 			ans=max(ans,x)
-			memo[x]=1
+			if x < len(memo): memo[x]=1
 	return ans
 
 def lambda_handler(event, context):

@@ -43,13 +43,13 @@
               "OutputPath": "$.Payload",
               "Parameters": {
                 "Payload":{
-                  "submissionId": "$.submissionId",
-                  "grader": "$.grader",
-                  "problemType": "$.problemType",
-                  "language": "$.language",
-                  "problemName": "$.problemName",
-                  "username": "$.username",
-                  "submissionTime": "$.submissionTime",
+                  "submissionId.$": "$.submissionId",
+                  "grader.$": "$.grader",
+                  "problemType.$": "$.problemType",
+                  "language.$": "$.language",
+                  "problemName.$": "$.problemName",
+                  "username.$": "$.username",
+                  "submissionTime.$": "$.submissionTime",
                   "eventType": "SUBMISSION"
                 },
                 "FunctionName": "arn:aws:lambda:ap-southeast-1:354145626860:function:${JudgeName}-compiler"

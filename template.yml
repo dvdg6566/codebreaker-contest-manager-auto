@@ -689,11 +689,11 @@ Resources:
             systemctl enable codebreaker
             systemctl start nginx
             systemctl enable nginx
-  WebServerEIP:
-    Type: AWS::EC2::EIP
-    DependsOn: WebServer
-    Properties:
-      InstanceId: !Ref WebServer
+  # WebServerEIP:
+  #   Type: AWS::EC2::EIP
+  #   DependsOn: WebServer
+  #   Properties:
+  #     InstanceId: !Ref WebServer
 Outputs: 
   GatewayEndpoint: 
     Value: 
@@ -704,9 +704,9 @@ Outputs:
         - ':'
         - - !GetAtt CompilerECRRepository.RepositoryUri
           - 'latest'
-  WebServerIP:
-    Description: Main web server IP address
-    Value: !Ref WebServerEIP
+  # WebServerIP:
+  #   Description: Main web server IP address
+  #   Value: !Ref WebServerEIP
   CognitoUserPoolId:
     Value: !Ref UserPool
   CognitoClientId:

@@ -125,7 +125,7 @@ def lambda_handler(event, context):
 		filename = obj.key
 
 		# Invalid file name
-		validFileName = re.match('[a-zA-Z0-9]+/[\d]+\.(in|out)', filename)
+		validFileName = re.match('^[\w]+/[\d]+\.(in|out)$', filename)
 		if validFileName == None: continue
 
 		# Split by / to remove the folder name, split '.' to separate in and out

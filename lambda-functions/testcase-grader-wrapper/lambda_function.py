@@ -14,7 +14,6 @@ submissions_table = dynamodb.Table(f'{judgeName}-submissions')
 def lambda_handler(event, context):
     subId = event["submissionId"]
     testcaseNumber = event["testcaseNumber"]
-    MLE = float(event["memoryLimit"])
     
     response = lambda_client.invoke(
         FunctionName = f'arn:aws:lambda:{region}:{accountId}:function:{judgeName}-testcase-grader',

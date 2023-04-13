@@ -17,8 +17,7 @@ from time import sleep, monotonic
 
 def cleanProc():
 	for proc in psutil.process_iter():
-		if proc.pid != 1 and proc.pid != 8:
-			# Pid 1 is the lambda container, Pid 8 is the python shell for the main code file
+		if proc.name in ['code', 'python3']:
 			pid = proc.pid
 			os.kill(pid, signal.SIGTERM)
 

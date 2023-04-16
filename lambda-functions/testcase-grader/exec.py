@@ -17,7 +17,7 @@ from time import sleep, monotonic
 
 def cleanProc():
 	for proc in psutil.process_iter():
-		if proc.name in ['code', 'python3']:
+		if proc.name() in ['code', 'python3']:
 			pid = proc.pid
 			os.kill(pid, signal.SIGTERM)
 

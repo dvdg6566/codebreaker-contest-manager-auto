@@ -192,33 +192,18 @@ Resources:
       BucketName:
         Fn::Sub: ${JudgeName}-attachments
       AccessControl: Private
-      PublicAccessBlockConfiguration:
-        BlockPublicAcls: True
-        BlockPublicPolicy: True
-        IgnorePublicAcls: True
-        RestrictPublicBuckets: True
   TestdataBucket:
     Type: AWS::S3::Bucket
     Properties:
       BucketName: 
         Fn::Sub: ${JudgeName}-testdata
       AccessControl: Private
-      PublicAccessBlockConfiguration:
-        BlockPublicAcls: True
-        BlockPublicPolicy: True
-        IgnorePublicAcls: True
-        RestrictPublicBuckets: True
   SubmissionsBucket:
     Type: AWS::S3::Bucket
     Properties:
       BucketName: 
         Fn::Sub: ${JudgeName}-submissions
       AccessControl: Private
-      PublicAccessBlockConfiguration:
-        BlockPublicAcls: True
-        BlockPublicPolicy: True
-        IgnorePublicAcls: True
-        RestrictPublicBuckets: True
       LifecycleConfiguration:
         Rules:
           - Id: clear-old-compiled
@@ -227,38 +212,22 @@ Resources:
             ExpirationInDays: 1
   StatementsBucket:
     Type: AWS::S3::Bucket
-    Description: Statements bucket is public to allow statements to be rendered on client-side
     Properties:
       BucketName:
         Fn::Sub: ${JudgeName}-statements
-      AccessControl: PublicRead
-      PublicAccessBlockConfiguration:
-        BlockPublicAcls: False
-        BlockPublicPolicy: False
-        IgnorePublicAcls: False
-        RestrictPublicBuckets: False
+      AccessControl: Private
   GradersBucket:
     Type: AWS::S3::Bucket
     Properties:
       BucketName: 
         Fn::Sub: ${JudgeName}-graders
       AccessControl: Private
-      PublicAccessBlockConfiguration:
-        BlockPublicAcls: True
-        BlockPublicPolicy: True
-        IgnorePublicAcls: True
-        RestrictPublicBuckets: True
   CheckersBucket: 
     Type: AWS::S3::Bucket
     Properties:
       BucketName: 
         Fn::Sub: ${JudgeName}-checkers
       AccessControl: Private
-      PublicAccessBlockConfiguration:
-        BlockPublicAcls: True
-        BlockPublicPolicy: True
-        IgnorePublicAcls: True
-        RestrictPublicBuckets: True
   AnnouncementsTable:
     Type: AWS::DynamoDB::Table
     Properties:

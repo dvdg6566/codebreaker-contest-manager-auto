@@ -574,6 +574,7 @@ Resources:
         - arn:aws:iam::aws:policy/AmazonS3FullAccess
         - arn:aws:iam::aws:policy/AWSLambda_FullAccess
         - arn:aws:iam::aws:policy/AWSStepFunctionsFullAccess # For grading of problems
+        - arn:aws:iam::aws:policy/AmazonCognitoPowerUser # For user management
   WebServerIamProfile:
     Type: AWS::IAM::InstanceProfile
     DependsOn: WebServerIamRole
@@ -602,75 +603,75 @@ Resources:
           FromPort: 8000
           IpProtocol: 'tcp'
           ToPort: 8000
-  WebServer:
-    Type: AWS::EC2::Instance
-    DependsOn: 
-      - WebServerIamProfile
-      - GlobalCountersTable
-    # Depends on global counters because the bootstrap script initialises global counter values
-    # TODO: Add dependncy on cognito and users table, then create initial admin user from bootstrap
-    Properties:
-      InstanceType: t2.nano
-      ImageId: ami-0b7e55206a0a22afc # Ubuntu 22.04 x64
-      IamInstanceProfile: 
-        Ref: WebServerIamProfile
-      Tags: 
-        - Key: Name
-          Value: 
-            Fn::Sub: ${JudgeName}-webserver
-      SecurityGroupIds:
-        - !Ref WebServerSecurityGroup
-      UserData:
-        Fn::Base64: 
-          !Sub | 
-            #!/bin/bash
-            apt update
-            apt install python3-pip -y
-            apt install python3-venv -y
-            apt install awscli -y
-            apt install nginx -y
-            cd home/ubuntu
-            git clone https://github.com/dvdg6566/codebreaker-contest-manager
-            cd codebreaker-contest-manager
+  # WebServer:
+  #   Type: AWS::EC2::Instance
+  #   DependsOn: 
+  #     - WebServerIamProfile
+  #     - GlobalCountersTable
+  #   # Depends on global counters because the bootstrap script initialises global counter values
+  #   # TODO: Add dependncy on cognito and users table, then create initial admin user from bootstrap
+  #   Properties:
+  #     InstanceType: t2.nano
+  #     ImageId: ami-0b7e55206a0a22afc # Ubuntu 22.04 x64
+  #     IamInstanceProfile: 
+  #       Ref: WebServerIamProfile
+  #     Tags: 
+  #       - Key: Name
+  #         Value: 
+  #           Fn::Sub: ${JudgeName}-webserver
+  #     SecurityGroupIds:
+  #       - !Ref WebServerSecurityGroup
+  #     UserData:
+  #       Fn::Base64: 
+  #         !Sub |
+  #           #!/bin/bash
+  #           apt update
+  #           apt install python3-pip -y
+  #           apt install python3-venv -y
+  #           apt install awscli -y
+  #           apt install nginx -y
+  #           cd home/ubuntu
+  #           git clone https://github.com/dvdg6566/codebreaker-contest-manager
+  #           cd codebreaker-contest-manager
 
-            python3 -m venv virtualenv
-            source virtualenv/bin/activate
-            pip3 install -r requirements.txt
+  #           python3 -m venv virtualenv
+  #           source virtualenv/bin/activate
+  #           pip3 install -r requirements.txt
 
-            mkdir config
-            mkdir /home/ubuntu/.aws/
+  #           mkdir config
+  #           mkdir /home/ubuntu/.aws/
 
-            {
-              echo '[default]'
-              echo 'region = ap-southeast-1'
-              echo 'output = json'
-            } >> config/awsconfig
-            cp config/awsconfig ~/.aws/config
+  #           {
+  #             echo '[default]'
+  #             echo 'region = ap-southeast-1'
+  #             echo 'output = json'
+  #           } >> config/awsconfig
+  #           cp config/awsconfig home/ubuntu/.aws/config
 
-            touch .env
-            {
-              echo 'JUDGE_NAME = codebreakercontest'
-              echo 'AWS_ACCOUNT_ID = 354145626860'
-              echo 'AWS_REGION = ap-southeast-1'
+  #           touch .env
+  #           {
+  #             echo 'JUDGE_NAME = codebreakercontest'
+  #             echo 'AWS_ACCOUNT_ID = 354145626860'
+  #             echo 'AWS_REGION = ap-southeast-1'
 
-              echo 'TIMEZONE_OFFSET = 8'
-              echo 'COGNITO_CLIENT_ID = 30ie37hitd97h3nge5uhf4kodp'
-              echo 'API_GATEWAY_LINK = wss://ty0j7jyjw1.execute-api.ap-southeast-1.amazonaws.com/production'
-              echo 'FLASK_SECRET_KEY = sometemporaryplaceholder'
-            } >> .env
+  #             echo 'TIMEZONE_OFFSET = 8'
+  #             echo 'COGNITO_CLIENT_ID = 30ie37hitd97h3nge5uhf4kodp'
+  #             echo 'API_GATEWAY_LINK = wss://ty0j7jyjw1.execute-api.ap-southeast-1.amazonaws.com/production'
+  #             echo 'FLASK_SECRET_KEY = sometemporaryplaceholder'
+  #           } >> .env
 
-            cp init/systemd /etc/systemd/system/codebreaker.service
-            cp init/nginx /etc/nginx/sites-available/default
+  #           cp init/systemd /etc/systemd/system/codebreaker.service
+  #           cp init/nginx /etc/nginx/sites-available/default
 
-            systemctl start codebreaker
-            systemctl enable codebreaker
-            systemctl start nginx
-            systemctl enable nginx
-  WebServerEIP:
-    Type: AWS::EC2::EIP
-    DependsOn: WebServer
-    Properties:
-      InstanceId: !Ref WebServer
+  #           systemctl start codebreaker
+  #           systemctl enable codebreaker
+  #           systemctl start nginx
+  #           systemctl enable nginx
+  # WebServerEIP:
+  #   Type: AWS::EC2::EIP
+  #   DependsOn: WebServer
+  #   Properties:
+  #     InstanceId: !Ref WebServer
 Outputs: 
   GatewayEndpoint: 
     Value: 
@@ -681,9 +682,9 @@ Outputs:
         - ':'
         - - !GetAtt CompilerECRRepository.RepositoryUri
           - 'latest'
-  WebServerIP:
-    Description: Main web server IP address
-    Value: !Ref WebServerEIP
+  # WebServerIP:
+  #   Description: Main web server IP address
+  #   Value: !Ref WebServerEIP
   CognitoUserPoolId:
     Value: !Ref UserPool
   CognitoClientId:

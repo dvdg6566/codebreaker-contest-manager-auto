@@ -75,6 +75,17 @@ Resources:
       CodeUri: lambda-functions/grader-problem-scorer
       Policies:
         - AmazonDynamoDBFullAccess
+  PsUtilLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: 
+        Fn::Sub: ${JudgeName}-psutil
+      Description: Lambda layer for testcase grading
+      ContentUri: lambda-functions/psutil
+      CompatibleRuntimes:
+        - python3.9
+      CompatibleArchitectures:
+        - x86_64
   TestcaseGraderWrapperFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -94,6 +105,8 @@ Resources:
       CodeUri: lambda-functions/testcase-grader
       Policies:
         - AmazonS3ReadOnlyAccess
+      Layers:
+        - !Ref PsUtilLayer
   CompilerECRRepository: 
     Type: AWS::ECR::Repository
     Properties:
@@ -171,7 +184,7 @@ Resources:
         TestcaseGraderWrapperFunctionArn: !GetAtt TestcaseGraderWrapperFunction.Arn
         ProblemScorerFunctionArn: !GetAtt GraderProblemScorerFunction.Arn
         JudgeName: !Ref JudgeName
-      Type: EXPRESS
+      Type: STANDARD
       Policies:
         - AWSLambdaRole
   WebSocketStateMachine:

@@ -22,6 +22,7 @@ Resources:
   ProblemValidationFunction:
     Type: AWS::Serverless::Function
     Properties:
+      Description: Lambda function to check that all problem files are present
       FunctionName: 
         Fn::Sub: ${JudgeName}-problem-validation
       CodeUri: lambda-functions/problem-validation
@@ -31,6 +32,7 @@ Resources:
   RegradeProblemFunction:
     Type: AWS::Serverless::Function
     Properties:
+      Description: Lambda function to trigger a regarde of all submissions to a problem
       FunctionName:
         Fn::Sub: ${JudgeName}-regrade-problem
       Timeout: 900 # Extra time to iterate through all submissions
@@ -42,6 +44,7 @@ Resources:
     DependsOn: WebSocket
     Type: AWS::Serverless::Function
     Properties:
+      Description: Lambda function to trigger API Gateway websockets for pings duirng announcements and clarifications
       FunctionName:
         Fn::Sub: ${JudgeName}-websocket-invoke
       CodeUri: lambda-functions/websocket-invoke
@@ -54,6 +57,7 @@ Resources:
   WebSocketConnectionsFunction:
     Type: AWS::Serverless::Function
     Properties:
+      Description: Lambda function for subscription to API Gateway websocket
       FunctionName:
         Fn::Sub: ${JudgeName}-websocket-connections
       CodeUri: lambda-functions/websocket-connections
@@ -62,6 +66,7 @@ Resources:
   GraderProblemInitFunction:
     Type: AWS::Serverless::Function
     Properties:
+      Description: Lambda function to create dynamoDB entry when initialising submission
       FunctionName:
         Fn::Sub: ${JudgeName}-grader-problem-init
       CodeUri: lambda-functions/grader-problem-init
@@ -70,6 +75,7 @@ Resources:
   GraderProblemScorerFunction:
     Type: AWS::Serverless::Function
     Properties:
+      Description: Lambda function to aggregate testcase verdicts and score submission
       FunctionName:
         Fn::Sub: ${JudgeName}-grader-problem-scorer
       CodeUri: lambda-functions/grader-problem-scorer
@@ -78,6 +84,7 @@ Resources:
   TestcaseGraderWrapperFunction:
     Type: AWS::Serverless::Function
     Properties:
+      Description: Lambda function that handles dynamoDB updates of score. Acts as wrapper to segregate permissions. 
       MemorySize: 128 # Wrapper function allocated minimal memory to minimise costs
       FunctionName:
         Fn::Sub: ${JudgeName}-testcase-grader-wrapper
@@ -90,7 +97,7 @@ Resources:
     Properties:
       LayerName: 
         Fn::Sub: ${JudgeName}-psutil
-      Description: Lambda layer for testcase grading
+      Description: Lambda layer for testcase grading for PSutil library
       ContentUri: lambda-functions/psutil
       CompatibleRuntimes:
         - python3.9
@@ -99,6 +106,7 @@ Resources:
   TestcaseGraderFunction:
     Type: AWS::Serverless::Function
     Properties:
+      Description: Lambda function that executes testcase with no/low permissions
       MemorySize: 2560 # Extra memory above 2048
       FunctionName:
         Fn::Sub: ${JudgeName}-testcase-grader
@@ -107,7 +115,7 @@ Resources:
         - AmazonS3ReadOnlyAccess
       Layers:
         - !Ref PsUtilLayer
-  CompilerECRRepository: 
+  CompilerECRRepository:
     Type: AWS::ECR::Repository
     Properties:
       RepositoryName: 
@@ -132,6 +140,7 @@ Resources:
   CodeBuildProject: 
     Type: 'AWS::CodeBuild::Project'
     Properties:
+      Description: CodeBuild Project to build compiler docker image
       ServiceRole: !GetAtt CodeBuildRole.Arn
       Name: 
         Fn::Sub:

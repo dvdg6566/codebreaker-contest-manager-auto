@@ -75,6 +75,16 @@ Resources:
       CodeUri: lambda-functions/grader-problem-scorer
       Policies:
         - AmazonDynamoDBFullAccess
+  TestcaseGraderWrapperFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      MemorySize: 128 # Wrapper function allocated minimal memory to minimise costs
+      FunctionName:
+        Fn::Sub: ${JudgeName}-testcase-grader-wrapper
+      CodeUri: lambda-functions/testcase-grader-wrapper
+      Policies:
+        - AmazonDynamoDBFullAccess
+        - AWSLambdaRole
   PsUtilLayer:
     Type: AWS::Serverless::LayerVersion
     Properties:
@@ -86,20 +96,10 @@ Resources:
         - python3.9
       CompatibleArchitectures:
         - x86_64
-  TestcaseGraderWrapperFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      MemorySize: 128 # Wrapper function allocated minimal memory to minimise costs
-      FunctionName:
-        Fn::Sub: ${JudgeName}-testcase-grader-wrapper
-      CodeUri: lambda-functions/testcase-grader-wrapper
-      Policies:
-        - AmazonDynamoDBFullAccess
-        - AWSLambdaRole
   TestcaseGraderFunction:
     Type: AWS::Serverless::Function
     Properties:
-      MemorySize: 2560 # Extra memory abovce 2048
+      MemorySize: 2560 # Extra memory above 2048
       FunctionName:
         Fn::Sub: ${JudgeName}-testcase-grader
       CodeUri: lambda-functions/testcase-grader

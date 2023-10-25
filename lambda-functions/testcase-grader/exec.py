@@ -27,7 +27,6 @@ def execute(cmd, outputFile, timeLimit, memoryLimit, checker=0):
 	# Hard limits for execution
 	allocatedTime = ceil(timeLimit+0.5)
 	allocatedMemory = (memoryLimit+128) * 1024 * 1024
-	numConnections = len(psutil.net_connections())
 
 	def setLimits():
 		resource.setrlimit(resource.RLIMIT_NOFILE, (4,4))
